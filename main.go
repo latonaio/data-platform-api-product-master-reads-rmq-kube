@@ -6,9 +6,9 @@ import (
 	dpfm_api_input_reader "data-platform-api-product-master-reads-rmq-kube/DPFM_API_Input_Reader"
 	"data-platform-api-product-master-reads-rmq-kube/config"
 
-	"github.com/latonaio/golang-logging-library-for-sap/logger"
+	dpfm_api_time_value_converter "github.com/latonaio/data-platform-api-time-value-converter"
+	"github.com/latonaio/golang-logging-library-for-data-platform/logger"
 	rabbitmq "github.com/latonaio/rabbitmq-golang-client"
-	sap_api_time_value_converter "github.com/latonaio/sap-api-time-value-converter"
 	"golang.org/x/xerrors"
 )
 
@@ -71,7 +71,7 @@ func extractData(data map[string]interface{}) (
 ) {
 
 	sdc := dpfm_api_input_reader.ConvertToSDC(data)
-	sap_api_time_value_converter.ChangeTimeFormatToSAPFormatStruct(&sdc)
+	dpfm_api_time_value_converter.ChangeTimeFormatToDPFMFormatStruct(&sdc)
 	metaData = sdc.MetaData
 	general = sdc.ConvertToGeneral()
 	plant = sdc.ConvertToPlant()

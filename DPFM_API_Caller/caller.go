@@ -4,7 +4,7 @@ import (
 	"data-platform-api-product-master-reads-rmq-kube/DPFM_API_Caller/requests"
 	"sync"
 
-	"github.com/latonaio/golang-logging-library-for-sap/logger"
+	"github.com/latonaio/golang-logging-library-for-data-platform/logger"
 )
 
 type RMQOutputter interface {

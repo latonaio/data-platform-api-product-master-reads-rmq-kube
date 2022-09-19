@@ -1,12 +1,12 @@
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/latonaio/golang-logging-library-for-sap v1.0.4 h1:06EyuMESuXLklP2XT98FJqvM47HOlHc2d5Fxrnuw3As=
-github.com/latonaio/golang-logging-library-for-sap v1.0.4/go.mod h1:Q6N2Fey+UaTk1tXogQ3/e3rdhPhsf21wqsFDdOkihcI=
+github.com/latonaio/data-platform-api-time-value-converter v1.0.0 h1:tmODNb5kN5+CKR0HZZN/OMGUsqsYJF56zav/wEH+xdU=
+github.com/latonaio/data-platform-api-time-value-converter v1.0.0/go.mod h1:Wx++O0QOAciSaYK1fvdOnaclO1Kc5QpFVnGWyVZrrwk=
+github.com/latonaio/golang-logging-library-for-data-platform v1.0.0 h1:q8VfWOJMDvqu1cEtAcvTESDH5Y+Wwtu93GEuTnKIxKs=
+github.com/latonaio/golang-logging-library-for-data-platform v1.0.0/go.mod h1:9Uv8NjExV1DRExDDktbud6L2K1kcUaYowUbBFaK1SLE=
 github.com/latonaio/rabbitmq-golang-client v1.0.2 h1:ME4e4jFlwiZujRv2t5pIikyN5kF1pIRE/GXEEz8oUCE=
 github.com/latonaio/rabbitmq-golang-client v1.0.2/go.mod h1:jAvWk2wi1GS+uN3BQbQD8pJqu9DWR3CFaNPSi/DR6fo=
-github.com/latonaio/sap-api-time-value-converter v1.0.8 h1:KCGvBlEuiJ5CigbI6i9Yvu4KmDW9avSFsB+TyOc9eXw=
-github.com/latonaio/sap-api-time-value-converter v1.0.8/go.mod h1:bBQZAf7U7trx2WpklPB71RYSbmWcPNHVW4NPZ0Whz3o=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/streadway/amqp v1.0.0 h1:kuuDrUJFZL1QYL9hUNuCxNObNzB0bV/ZG5jV3RWAQgo=

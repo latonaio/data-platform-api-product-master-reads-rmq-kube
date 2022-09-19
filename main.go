@@ -6,7 +6,7 @@ import (
 	dpfm_api_input_reader "data-platform-api-product-master-reads-rmq-kube/DPFM_API_Input_Reader"
 	"data-platform-api-product-master-reads-rmq-kube/config"
 
-	"github.com/latonaio/golang-logging-library-for-data-platform-api-product-master-reads-rmq-kube/logger"
+	"github.com/latonaio/golang-logging-library-for-sap/logger"
 	rabbitmq "github.com/latonaio/rabbitmq-golang-client"
 	sap_api_time_value_converter "github.com/latonaio/sap-api-time-value-converter"
 	"golang.org/x/xerrors"

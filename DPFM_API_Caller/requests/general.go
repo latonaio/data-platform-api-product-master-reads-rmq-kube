@@ -1,20 +1,22 @@
 package requests
 
 type General struct {
-	Product             string  `json:"Product"`
-	ProductType         *string `json:"ProductType,omitempty"`
-	IsMarkedForDeletion *bool   `json:"IsMarkedForDeletion,omitempty"`
-	GrossWeight         *string `json:"GrossWeight,omitempty"`
-	WeightUnit          *string `json:"WeightUnit,omitempty"`
-	ProductGroup        *string `json:"ProductGroup,omitempty"`
-	BaseUnit            *string `json:"BaseUnit,omitempty"`
-	Division            *string `json:"Division,omitempty"`
-	NetWeight           *string `json:"NetWeight,omitempty"`
-	ValidityStartDate   *string `json:"ValidityStartDate,omitempty"`
-	SizeOrDimensionText *string `json:"SizeOrDimensionText,omitempty"`
-	ProductStandardID   *string `json:"ProductStandardID,omitempty"`
-	IndustrySector      *string `json:"IndustrySector,omitempty"`
-	ToProductDesc       *struct {
-		ToProductDescResults []*ProductDesc `json:"results"`
-	} `json:"to_Description"`
+	Product                       string   `json:"Product"`
+	ProductType                   *string  `json:"ProductType"`
+	BaseUnit                      *string  `json:"BaseUnit"`
+	ValidityStartDate             *string  `json:"ValidityStartDate"`
+	ProductGroup                  *string  `json:"ProductGroup"`
+	Division                      *string  `json:"Division"`
+	GrossWeight                   *float32 `json:"GrossWeight"`
+	WeightUnit                    *string  `json:"WeightUnit"`
+	SizeOrDimensionText           *string  `json:"SizeOrDimensionText"`
+	IndustryStandardName          *string  `json:"IndustryStandardName"`
+	ProductStandardID             *string  `json:"ProductStandardID"`
+	CreationDate                  *string  `json:"CreationDate"`
+	LastChangeDate                *string  `json:"LastChangeDate"`
+	NetWeight                     *float32 `json:"NetWeight"`
+	CountryOfOrigin               *string  `json:"CountryOfOrigin"`
+	ItemCategory                  *string  `json:"ItemCategory"`
+	ProductAccountAssignmentGroup *string  `json:"ProductAccountAssignmentGroup"`
+	IsMarkedForDeletion           *bool    `json:"IsMarkedForDeletion"`
 }

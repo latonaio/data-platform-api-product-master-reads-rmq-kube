@@ -2,104 +2,116 @@ package main
 
 import (
 	dpfm_api_caller "data-platform-api-product-master-reads-rmq-kube/DPFM_API_Caller"
-	"data-platform-api-product-master-reads-rmq-kube/DPFM_API_Caller/requests"
 	dpfm_api_input_reader "data-platform-api-product-master-reads-rmq-kube/DPFM_API_Input_Reader"
+	dpfm_api_output_formatter "data-platform-api-product-master-reads-rmq-kube/DPFM_API_Output_Formatter"
 	"data-platform-api-product-master-reads-rmq-kube/config"
+	"encoding/json"
+	"fmt"
+	"time"
 
-	dpfm_api_time_value_converter "github.com/latonaio/data-platform-api-time-value-converter"
 	"github.com/latonaio/golang-logging-library-for-data-platform/logger"
-	rabbitmq "github.com/latonaio/rabbitmq-golang-client"
-	"golang.org/x/xerrors"
+	database "github.com/latonaio/golang-mysql-network-connector"
+	rabbitmq "github.com/latonaio/rabbitmq-golang-client-for-data-platform"
 )
 
 func main() {
 	l := logger.NewLogger()
 	conf := config.NewConf()
-	rmq, err := rabbitmq.NewRabbitmqClient(conf.RMQ.URL(), conf.RMQ.QueueFrom(), conf.RMQ.QueueTo())
+	db, err := database.NewMySQL(conf.DB)
+	rmq, err := rabbitmq.NewRabbitmqClient(conf.RMQ.URL(), conf.RMQ.QueueFrom(), conf.RMQ.SessionControlQueue(), conf.RMQ.QueueToSQL(), 0)
 	if err != nil {
 		l.Fatal(err.Error())
 	}
 	defer rmq.Close()
-	caller := dpfm_api_caller.NewDPFMAPICaller(
-		conf.RMQ.QueueTo(),
-		rmq,
-		l,
-	)
-
 	iter, err := rmq.Iterator()
 	if err != nil {
 		l.Fatal(err.Error())
 	}
 	defer rmq.Stop()
 
+	caller := dpfm_api_caller.NewDPFMAPICaller(conf, rmq, db)
+
 	for msg := range iter {
-		err = callProcess(caller, msg)
+		start := time.Now()
+		err = callProcess(rmq, caller, conf, msg)
 		if err != nil {
 			msg.Fail()
-			l.Error(err)
 			continue
 		}
 		msg.Success()
+		l.Info("process time %v\n", time.Since(start).Milliseconds())
 	}
 }
 
-func callProcess(caller *dpfm_api_caller.DPFMAPICaller, msg rabbitmq.RabbitmqMessage) (err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			err = xerrors.Errorf("error occurred: %w", e)
-			return
+func recovery(l *logger.Logger, err *error) {
+	if e := recover(); e != nil {
+		*err = fmt.Errorf("error occurred: %w", e)
+		l.Error(err)
+		return
+	}
+}
+func getSessionID(data map[string]interface{}) string {
+	id := fmt.Sprintf("%v", data["runtime_session_id"])
+	return id
+}
+
+func callProcess(rmq *rabbitmq.RabbitmqClient, caller *dpfm_api_caller.DPFMAPICaller, conf *config.Conf, msg rabbitmq.RabbitmqMessage) (err error) {
+	l := logger.NewLogger()
+	defer recovery(l, &err)
+
+	l.AddHeaderInfo(map[string]interface{}{"runtime_session_id": getSessionID(msg.Data())})
+	var input dpfm_api_input_reader.SDC
+	var output dpfm_api_output_formatter.SDC
+
+	err = json.Unmarshal(msg.Raw(), &input)
+	if err != nil {
+		l.Error(err)
+		return
+	}
+	err = json.Unmarshal(msg.Raw(), &output)
+	if err != nil {
+		l.Error(err)
+		return
+	}
+
+	accepter := getAccepter(&input)
+	res, errs := caller.AsyncProductMasterReads(accepter, &input, &output, l)
+	if len(errs) != 0 {
+		for _, err := range errs {
+			l.Error(err)
 		}
-	}()
-	metaData, product, plant, mrpArea, valuationArea, productSalesOrg, productDistributionChnl, language, productDescription, country, taxCategory := extractData(msg.Data())
-	accepter := getAccepter(msg.Data())
-	caller.AsyncGetProductMaster(metaData, product, plant, mrpArea, valuationArea, productSalesOrg, productDistributionChnl, language, productDescription, country, taxCategory, accepter)
+		output.APIProcessingResult = getBoolPtr(false)
+		output.APIProcessingError = errs[0].Error()
+		output.Message = res
+		rmq.Send(conf.RMQ.QueueToResponse(), output)
+		return errs[0]
+	}
+	output.APIProcessingResult = getBoolPtr(true)
+	output.Message = res
+
+	l.JsonParseOut(output)
+	rmq.Send(conf.RMQ.QueueToResponse(), output)
+
 	return nil
 }
 
-func extractData(data map[string]interface{}) (
-	metaData map[string]interface{},
-	general *requests.General,
-	plant *requests.Plant,
-	mrpArea *requests.MRPArea,
-	procurement *requests.Procurement,
-	workScheduling *requests.WorkScheduling,
-	salesPlant *requests.SalesPlant,
-	accounting *requests.Accounting,
-	salesOrganization *requests.SalesOrganization,
-	productDesc *requests.ProductDesc,
-	quality *requests.Quality,
-) {
-
-	sdc := dpfm_api_input_reader.ConvertToSDC(data)
-	dpfm_api_time_value_converter.ChangeTimeFormatToDPFMFormatStruct(&sdc)
-	metaData = sdc.MetaData
-	general = sdc.ConvertToGeneral()
-	plant = sdc.ConvertToPlant()
-	mrpArea = sdc.ConvertToMRPArea()
-	procurement = sdc.ConvertToProcurement()
-	workScheduling = sdc.ConvertToWorkScheduling()
-	salesPlant = sdc.ConvertToSalesPlant()
-	accounting = sdc.ConvertToAccounting()
-	salesOrganization = sdc.ConvertToSalesOrganization()
-	productDesc = sdc.ConvertToProductDesc()
-	quality = sdc.ConvertToQuality()
-	return
-}
-
-func getAccepter(data map[string]interface{}) []string {
-	sdc := dpfm_api_input_reader.ConvertToSDC(data)
-	accepter := sdc.Accepter
-	if len(sdc.Accepter) == 0 {
+func getAccepter(input *dpfm_api_input_reader.SDC) []string {
+	accepter := input.Accepter
+	if len(input.Accepter) == 0 {
 		accepter = []string{"All"}
 	}
 
 	if accepter[0] == "All" {
 		accepter = []string{
-			"General", "Plant", "MRPArea", "Procurement",
-			"WorkScheduling", "SalesPlant",
-			"Accounting", "SalesOrganization", "ProductDesc",
-			"Quality",
+			"General", "GeneralPDF", "BusinessPartner", "BPPlant",
+			"BPPlantPDF", "StorageLocation", "Procurement", "MRPArea",
+			"WorkScheduling", "Accounting", "Sales", "Tax",
+			"ProductDescription", "ProductDescriptionByBusinessPartner",
 		}
 	}
 	return accepter
+}
+
+func getBoolPtr(b bool) *bool {
+	return &b
 }

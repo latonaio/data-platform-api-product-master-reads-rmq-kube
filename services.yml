@@ -9,52 +9,38 @@ spec:
   selector:
     matchLabels:
       run: data-platform-api-product-master-reads-rmq-kube
+      app: PRODUCT_MASTER
   template:
     metadata:
       labels:
         run: data-platform-api-product-master-reads-rmq-kube
+        app: PRODUCT_MASTER
     spec:
       hostname: data-platform-api-product-master-reads-rmq-kube
       containers:
         - name: data-platform-api-product-master-reads-rmq-kube
           image: latonaio/data-platform-api-product-master-reads-rmq-kube
-          imagePullPolicy: IfNotPresent
-          volumeMounts:
-            - name: data
-              mountPath: /var/lib/aion/Data
-            - name: ui
-              mountPath: /var/lib/aion/UI/data-platform-api-product-master-reads-rmq-kube/public/
+          imagePullPolicy: Always
           env:
-            - name: RMQ_USER
-              value: "guest"
-            - name: RMQ_PASS
-              value: "guest"
-            - name: RMQ_ADDRESS
-              value: "192.168.128.135"
-            - name: RMQ_PORT
-              value: "32094"
-            - name: RMQ_VHOST
-              value: "sap-test"
-            - name: RMQ_QUEUE_FROM
-              value: "data-platform-api-product-master-reads-rmq-kube"
-            - name: RMQ_QUEUE_TO
-              value: "data-platform-sql-updates-rmq-kube"
-            - name: DPFM_API_BASE_URL
-              value: "https://XXX.XX.XX.XXX:8080/dpfm/opu/odata/dpfm/"
-          resources:
-            limits:
-              cpu: "1"
-              memory: "200Mi"
-            requests:
-              cpu: "0.5"
-              memory: "100Mi"
-      volumes:
-        - name: data
-          hostPath:
-            path: /var/lib/aion/default/Data
-        - name: ui
-          hostPath:
-            path: /var/lib/aion/UI/data-platform-api-product-master-reads-rmq-kube/public/
+            - name: "RMQ_QUEUE_FROM"
+              value: "data-platform-api-product-master-reads-queue"
+            - name: "RMQ_QUEUE_TO_SQL"
+              value: ""
+            - name: "RMQ_QUEUE_TO_EX_CONF"
+              value: ""
+            - name: "RMQ_QUEUE_TO_HEADERS_SUB_FUNC"
+              value: ""
+            - name: "RMQ_QUEUE_TO_ITEMS_SUB_FUNC"
+              value: ""
+            - name: "RMQ_SESSION_CONTROL_QUEUE"
+              value: "data-platform-api-product-master-reads-session-control-queue"
+            - name: "DB_NAME"
+              value: "DataPlatformMastersAndTransactionsMysqlKube"
+          envFrom:
+            - configMapRef:
+                name: env-config
+            - secretRef:
+                name: env-secret
 ---
 apiVersion: v1
 kind: Service
@@ -71,4 +57,4 @@ spec:
       port: 8080
       protocol: TCP
       targetPort: 8080
-      nodePort: 30512
+      nodePort: 30623

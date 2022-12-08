@@ -1,13 +1,14 @@
 package requests
 
 type Accounting struct {
-	Product             string  `json:"Product"`
-	ValuationArea       string  `json:"ValuationArea"`
-	ValuationClass      *string `json:"ValuationClass,omitempty"`
-	StandardPrice       *string `json:"StandardPrice,omitempty"`
-	PriceUnitQty        *string `json:"PriceUnitQty,omitempty"`
-	MovingAveragePrice  *string `json:"MovingAveragePrice,omitempty"`
-	PriceLastChangeDate *string `json:"PriceLastChangeDate,omitempty"`
-	PlannedPrice        *string `json:"PlannedPrice,omitempty"`
-	IsMarkedForDeletion *bool   `json:"IsMarkedForDeletion,omitempty"`
+	Product             string   `json:"Product"`
+	BusinessPartner     *int     `json:"BusinessPartner"`
+	Plant               string   `json:"Plant"`
+	ValuationClass      string   `json:"ValuationClass"`
+	CostingPolicy       string   `json:"CostingPolicy"`
+	PriceUnitQty        string   `json:"PriceUnitQty"`
+	StandardPrice       *float32 `json:"StandardPrice"`
+	MovingAveragePrice  *float32 `json:"MovingAveragePrice"`
+	PriceLastChangeDate string   `json:"PriceLastChangeDate"`
+	IsMarkedForDeletion *bool    `json:"IsMarkedForDeletion"`
 }

@@ -1,0 +1,141 @@
+{
+	"connection_key": "request",
+	"result": true,
+	"redis_key": "abcdefg",
+	"filepath": "/var/lib/aion/Data/rededge_sdc/abcdef.json",
+	"api_status_code": 200,
+	"runtime_session_id": "boi9ar543dg91ipdnspi099u231280ab0v8af0ew",
+	"business_partner": null,
+	"service_label": "PRODUCT_MASTER",
+	"api_type": "",
+	"Product": {
+		"Product": "A3750",
+		"ProductType": "",
+		"BaseUnit": "",
+		"ValidityStartDate": "",
+		"ProductGroup": "",
+		"Division": "",
+		"GrossWeight": null,
+		"WeightUnit": "",
+		"SizeOrDimensionText": "",
+		"IndustryStandardName": "",
+		"ProductStandardID": "",
+		"CreationDate": "",
+		"LastChangeDate": "",
+		"NetWeight": null,
+		"CountryOfOrigin": "",
+		"ItemCategory": "",
+		"ProductAccountAssignmentGroup": "",
+		"IsMarkedForDeletion": null,
+		"GeneralPDF": {
+			"DocType": "",
+			"DocVersionID": null,
+			"DocID": "",
+			"FileName": ""
+		},
+		"BusinessPartner": {
+			"BusinessPartner": null,
+			"ValidityEndDate": "",
+			"ValidityStartDate": "",
+			"IsMarkedForDeletion": null,
+			"BPPlant": {
+				"Plant": "",
+				"Issuable": null,
+				"Receivable": null,
+				"IssuingStorageLocation": "",
+				"ReceivingStorageLocation": "",
+				"AvailabilityCheckType": "",
+				"ProfitCenter": "",
+				"MRPType": "",
+				"MRPResponsible": "",
+				"MinimumLotSizeQuantity": "",
+				"MaximumLotSizeQuantity": "",
+				"FixedLotSizeQuantity": "",
+				"IsBatchManagementRequired": null,
+				"ProcurementType": "",
+				"InventoryUnit": "",
+				"IsMarkedForDeletion": null,
+				"BPPlantPDF": {
+					"DocType": "",
+					"DocVersionID": null,
+					"DocID": "",
+					"FileName": ""
+				},
+				"StorageLocation": {
+					"StorageLocation": "",
+					"CreationDate": "",
+					"InventoryBlockStatus": null,
+					"IsMarkedForDeletion": null
+				},
+				"Procurement": {
+					"Buyable": null,
+					"IsAutoPurOrdCreationAllowed": null,
+					"IsSourceListRequired": null,
+					"IsMarkedForDeletion": null
+				},
+				"MRPArea": {
+					"MRPArea": "",
+					"MRPType": "",
+					"MRPResponsible": "",
+					"MRPGroup": "",
+					"ReorderThresholdQuantity": null,
+					"PlanningTimeFence": null,
+					"LotSizeRoundingQuantity": null,
+					"MinimumLotSizeQuantity": null,
+					"MaximumLotSizeQuantity": null,
+					"MaximumStockQuantity": null,
+					"DfltStorageLocationExtProcmt": "",
+					"MRPPlanningCalendar": "",
+					"SafetyStockQuantity": null,
+					"SafetyDuration": null,
+					"FixedLotSizeQuantity": null,
+					"PlannedDeliveryDurationInDays": null,
+					"StorageLocationForMRP": "",
+					"IsMarkedForDeletion": null
+				},
+				"WorkScheduling": {
+					"ProductionInvtryManagedLoc": "",
+					"ProductProcessingTime": null,
+					"ProductionSupervisor": "",
+					"ProductProductionQuantityUnit": "",
+					"ProdnOrderIsBatchRequired": null,
+					"PDTCompIsMarkedForBackflush": null,
+					"ProductionSchedulingProfile": "",
+					"IsMarkedForDeletion": null
+				},
+				"Accounting": {
+					"ValuationClass": "",
+					"CostingPolicy": "",
+					"PriceUnitQty": "",
+					"StandardPrice": null,
+					"MovingAveragePrice": null,
+					"PriceLastChangeDate": null,
+					"PlannedPrice": "",
+					"IsMarkedForDeletion": null
+				}
+			},
+			"Sales": {
+				"Sellable": null,
+				"IsMarkedForDeletion": null
+			},
+			"Tax": {
+				"Country": "",
+				"TaxCategory": "",
+				"ProductTaxClassification": ""
+			}
+		},
+		"ProductDescription": {
+			"Language": "",
+			"ProductDescription": ""
+		},
+		"ProductDescriptionByBusinessPartner": {
+			"BusinessPartner": 201,
+			"Language": "JA",
+			"ProductDescription": ""
+		}
+	},
+	"api_schema": "DPFMProductMasterReads",
+	"accepter": ["General", "ProductDescriptionByBusinessPartner"],
+	"product_id": "",
+	"deleted": false
+}

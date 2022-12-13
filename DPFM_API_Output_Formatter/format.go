@@ -101,66 +101,436 @@ func ConvertToProductDescriptionByBusinessPartner(sdc *api_input_reader.SDC, row
 	return productDescriptionByBusinessPartner, nil
 }
 
-// func (sdc *SDC) ConvertToBusinessPartner() *requests.BusinessPartner {
-// 	dataGeneral := sdc.General
-// 	data := sdc.BusinessPartner
-// 	return &requests.BusinessPartner{
-// 		Product:                dataGeneral.Product,
-// 		BusinessPartner:        data.BusinessPartner,
-// 		ValidityEndDate:        data.ValidityEndDate,
-// 		ValidityStartDate:      data.ValidityStartDate,
-// 		BusinessPartnerProduct: data.BusinessPartnerProduct,
-// 		IsMarkedForDeletion:    data.IsMarkedForDeletion,
-// 	}
-// }
+func ConvertToBusinessPartner(sdc *api_input_reader.SDC, rows *sql.Rows) (*BusinessPartner, error) {
+	pm := &requests.BusinessPartner{}
 
-// func (sdc *SDC) ConvertToProcurement() *requests.Procurement {
-// 	dataGeneral := sdc.General
-// 	dataBusinessPartner := sdc.BusinessPartner
-// 	data := sdc.Procurement
-// 	return &requests.Procurement{
-// 		Product:                     dataGeneral.Product,
-// 		BusinessPartner:             dataBusinessPartner.BusinessPartner,
-// 		Plant:                       data.Plant,
-// 		Buyable:                     data.Buyable,
-// 		IsAutoPurOrdCreationAllowed: data.IsAutoPurOrdCreationAllowed,
-// 		IsSourceListRequired:        data.IsSourceListRequired,
-// 		IsMarkedForDeletion:         data.IsMarkedForDeletion,
-// 	}
-// }
+	for i := 0; true; i++ {
+		if !rows.Next() {
+			if i == 0 {
+				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
+			} else {
+				break
+			}
+		}
+		err := rows.Scan(
+			&pm.Product,
+			&pm.BusinessPartner,
+			&pm.ValidityEndDate,
+			&pm.ValidityStartDate,
+			&pm.BusinessPartnerProduct,
+			&pm.IsMarkedForDeletion,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return nil, err
+		}
+	}
+	data := pm
 
-// func (sdc *SDC) ConvertToBPPlant(num int) *requests.BPPlant {
-// 	dataGeneral := sdc.General
-// 	dataBusinessPartner := sdc.BusinessPartner
-// 	data := sdc.BusinessPartner.BPPlant[num]
-// 	return &requests.BPPlant{
-// 		Product:                   dataGeneral.Product,
-// 		BusinessPartner:           dataBusinessPartner.BusinessPartner,
-// 		Plant:                     data.Plant,
-// 		Issuable:                  data.Issuable,
-// 		Receivable:                data.Receivable,
-// 		IssuingStorageLocation:    data.IssuingStorageLocation,
-// 		ReceivingStorageLocation:  data.ReceivingStorageLocation,
-// 		AvailabilityCheckType:     data.AvailabilityCheckType,
-// 		ProfitCenter:              data.ProfitCenter,
-// 		MRPType:                   data.MRPType,
-// 		MRPResponsible:            data.MRPResponsible,
-// 		MinimumLotSizeQuantity:    data.MinimumLotSizeQuantity,
-// 		MaximumLotSizeQuantity:    data.MaximumLotSizeQuantity,
-// 		FixedLotSizeQuantity:      data.FixedLotSizeQuantity,
-// 		IsBatchManagementRequired: data.IsBatchManagementRequired,
-// 		ProcurementType:           data.ProcurementType,
-// 		InventoryUnit:             data.InventoryUnit,
-// 		IsMarkedForDeletion:       data.IsMarkedForDeletion,
-// 	}
-// }
+	businessPartner := &BusinessPartner{
+		Product:                data.Product,
+		BusinessPartner:        data.BusinessPartner,
+		ValidityEndDate:        data.ValidityEndDate,
+		ValidityStartDate:      data.ValidityStartDate,
+		BusinessPartnerProduct: data.BusinessPartnerProduct,
+		IsMarkedForDeletion:    data.IsMarkedForDeletion,
+	}
+	return businessPartner, nil
+}
 
-// func (sdc *SDC) ConvertToProductDescription() *requests.ProductDescription {
-// 	dataGeneral := sdc.General
-// 	data := sdc.ProductDescription
-// 	return &requests.ProductDescription{
-// 		Product:            dataGeneral.Product,
-// 		Language:           data.Language,
-// 		ProductDescription: data.ProductDescription,
-// 	}
-// }
+func ConvertToProductDescription(sdc *api_input_reader.SDC, rows *sql.Rows) (*ProductDescription, error) {
+	pm := &requests.ProductDescription{}
+
+	for i := 0; true; i++ {
+		if !rows.Next() {
+			if i == 0 {
+				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
+			} else {
+				break
+			}
+		}
+		err := rows.Scan(
+			&pm.Product,
+			&pm.Language,
+			&pm.ProductDescription,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return nil, err
+		}
+	}
+	data := pm
+
+	productDescription := &ProductDescription{
+		Product:            data.Product,
+		Language:           data.Language,
+		ProductDescription: data.ProductDescription,
+	}
+	return productDescription, nil
+}
+
+func ConvertToSales(sdc *api_input_reader.SDC, rows *sql.Rows) (*Sales, error) {
+	pm := &requests.Sales{}
+
+	for i := 0; true; i++ {
+		if !rows.Next() {
+			if i == 0 {
+				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
+			} else {
+				break
+			}
+		}
+		err := rows.Scan(
+			&pm.Product,
+			&pm.BusinessPartner,
+			&pm.Sellable,
+			&pm.IsMarkedForDeletion,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return nil, err
+		}
+	}
+	data := pm
+
+	sales := &Sales{
+		Product:             data.Product,
+		BusinessPartner:     data.BusinessPartner,
+		Sellable:            data.Sellable,
+		IsMarkedForDeletion: data.IsMarkedForDeletion,
+	}
+	return sales, nil
+}
+
+func ConvertToBPPlant(sdc *api_input_reader.SDC, rows *sql.Rows) (*BPPlant, error) {
+	pm := &requests.BPPlant{}
+
+	for i := 0; true; i++ {
+		if !rows.Next() {
+			if i == 0 {
+				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
+			} else {
+				break
+			}
+		}
+		err := rows.Scan(
+			&pm.Product,
+			&pm.BusinessPartner,
+			&pm.Plant,
+			&pm.Issuable,
+			&pm.Receivable,
+			&pm.IssuingStorageLocation,
+			&pm.ReceivingStorageLocation,
+			&pm.AvailabilityCheckType,
+			&pm.ProfitCenter,
+			&pm.MRPType,
+			&pm.MRPResponsible,
+			&pm.MinimumLotSizeQuantity,
+			&pm.MaximumLotSizeQuantity,
+			&pm.FixedLotSizeQuantity,
+			&pm.IsBatchManagementRequired,
+			&pm.ProcurementType,
+			&pm.InventoryUnit,
+			&pm.IsMarkedForDeletion,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return nil, err
+		}
+	}
+	data := pm
+
+	bPPlant := &BPPlant{
+		Product:                   data.Product,
+		BusinessPartner:           data.BusinessPartner,
+		Plant:                     data.Plant,
+		Issuable:                  data.Issuable,
+		Receivable:                data.Receivable,
+		IssuingStorageLocation:    data.IssuingStorageLocation,
+		ReceivingStorageLocation:  data.ReceivingStorageLocation,
+		AvailabilityCheckType:     data.AvailabilityCheckType,
+		ProfitCenter:              data.ProfitCenter,
+		MRPType:                   data.MRPType,
+		MRPResponsible:            data.MRPResponsible,
+		MinimumLotSizeQuantity:    data.MinimumLotSizeQuantity,
+		MaximumLotSizeQuantity:    data.MaximumLotSizeQuantity,
+		FixedLotSizeQuantity:      data.FixedLotSizeQuantity,
+		IsBatchManagementRequired: data.IsBatchManagementRequired,
+		ProcurementType:           data.ProcurementType,
+		InventoryUnit:             data.InventoryUnit,
+		IsMarkedForDeletion:       data.IsMarkedForDeletion,
+	}
+	return bPPlant, nil
+}
+
+func ConvertToTax(sdc *api_input_reader.SDC, rows *sql.Rows) (*Tax, error) {
+	pm := &requests.Tax{}
+
+	for i := 0; true; i++ {
+		if !rows.Next() {
+			if i == 0 {
+				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
+			} else {
+				break
+			}
+		}
+		err := rows.Scan(
+			&pm.Product,
+			&pm.BusinessPartner,
+			&pm.Country,
+			&pm.TaxCategory,
+			&pm.ProductTaxClassification,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return nil, err
+		}
+	}
+	data := pm
+
+	tax := &Tax{
+		Product:                  data.Product,
+		BusinessPartner:          data.BusinessPartner,
+		Country:                  data.Country,
+		TaxCategory:              data.TaxCategory,
+		ProductTaxClassification: data.ProductTaxClassification,
+	}
+	return tax, nil
+}
+
+func ConvertToAccounting(sdc *api_input_reader.SDC, rows *sql.Rows) (*Accounting, error) {
+	pm := &requests.Accounting{}
+
+	for i := 0; true; i++ {
+		if !rows.Next() {
+			if i == 0 {
+				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
+			} else {
+				break
+			}
+		}
+		err := rows.Scan(
+			&pm.Product,
+			&pm.BusinessPartner,
+			&pm.Plant,
+			&pm.ValuationClass,
+			&pm.CostingPolicy,
+			&pm.PriceUnitQty,
+			&pm.StandardPrice,
+			&pm.MovingAveragePrice,
+			&pm.PriceLastChangeDate,
+			&pm.IsMarkedForDeletion,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return nil, err
+		}
+	}
+	data := pm
+
+	accounting := &Accounting{
+		Product:             data.Product,
+		BusinessPartner:     data.BusinessPartner,
+		Plant:               data.Plant,
+		ValuationClass:      data.ValuationClass,
+		CostingPolicy:       data.CostingPolicy,
+		PriceUnitQty:        data.PriceUnitQty,
+		StandardPrice:       data.StandardPrice,
+		MovingAveragePrice:  data.MovingAveragePrice,
+		PriceLastChangeDate: data.PriceLastChangeDate,
+		IsMarkedForDeletion: data.IsMarkedForDeletion,
+	}
+	return accounting, nil
+}
+
+func ConvertToProcurement(sdc *api_input_reader.SDC, rows *sql.Rows) (*Procurement, error) {
+	pm := &requests.Procurement{}
+
+	for i := 0; true; i++ {
+		if !rows.Next() {
+			if i == 0 {
+				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
+			} else {
+				break
+			}
+		}
+		err := rows.Scan(
+			&pm.Product,
+			&pm.BusinessPartner,
+			&pm.Plant,
+			&pm.Buyable,
+			&pm.IsAutoPurOrdCreationAllowed,
+			&pm.IsSourceListRequired,
+			&pm.IsMarkedForDeletion,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return nil, err
+		}
+	}
+	data := pm
+
+	procurement := &Procurement{
+		Product:                     data.Product,
+		BusinessPartner:             data.BusinessPartner,
+		Plant:                       data.Plant,
+		Buyable:                     data.Buyable,
+		IsAutoPurOrdCreationAllowed: data.IsAutoPurOrdCreationAllowed,
+		IsSourceListRequired:        data.IsSourceListRequired,
+		IsMarkedForDeletion:         data.IsMarkedForDeletion,
+	}
+	return procurement, nil
+}
+
+func ConvertToStorageLocation(sdc *api_input_reader.SDC, rows *sql.Rows) (*StorageLocation, error) {
+	pm := &requests.StorageLocation{}
+
+	for i := 0; true; i++ {
+		if !rows.Next() {
+			if i == 0 {
+				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
+			} else {
+				break
+			}
+		}
+		err := rows.Scan(
+			&pm.Product,
+			&pm.BusinessPartner,
+			&pm.Plant,
+			&pm.StorageLocation,
+			&pm.CreationDate,
+			&pm.InventoryBlockStatus,
+			&pm.IsMarkedForDeletion,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return nil, err
+		}
+	}
+	data := pm
+
+	storageLocation := &StorageLocation{
+		Product:              data.Product,
+		BusinessPartner:      data.BusinessPartner,
+		Plant:                data.Plant,
+		StorageLocation:      data.StorageLocation,
+		CreationDate:         data.CreationDate,
+		InventoryBlockStatus: data.InventoryBlockStatus,
+		IsMarkedForDeletion:  data.IsMarkedForDeletion,
+	}
+	return storageLocation, nil
+}
+
+func ConvertToMRPArea(sdc *api_input_reader.SDC, rows *sql.Rows) (*MRPArea, error) {
+	pm := &requests.MRPArea{}
+
+	for i := 0; true; i++ {
+		if !rows.Next() {
+			if i == 0 {
+				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
+			} else {
+				break
+			}
+		}
+		err := rows.Scan(
+			&pm.Product,
+			&pm.BusinessPartner,
+			&pm.Plant,
+			&pm.MRPArea,
+			&pm.MRPType,
+			&pm.MRPResponsible,
+			&pm.MRPGroup,
+			&pm.ReorderThresholdQuantity,
+			&pm.PlanningTimeFence,
+			&pm.LotSizeRoundingQuantity,
+			&pm.MinimumLotSizeQuantity,
+			&pm.MaximumLotSizeQuantity,
+			&pm.MaximumStockQuantity,
+			&pm.DfltStorageLocationExtProcmt,
+			&pm.MRPPlanningCalendar,
+			&pm.SafetyStockQuantity,
+			&pm.SafetyDuration,
+			&pm.FixedLotSizeQuantity,
+			&pm.PlannedDeliveryDurationInDays,
+			&pm.StorageLocation,
+			&pm.IsMarkedForDeletion,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return nil, err
+		}
+	}
+	data := pm
+
+	mRPArea := &MRPArea{
+		Product:                       data.Product,
+		BusinessPartner:               data.BusinessPartner,
+		Plant:                         data.Plant,
+		MRPArea:                       data.MRPArea,
+		MRPType:                       data.MRPType,
+		MRPResponsible:                data.MRPResponsible,
+		MRPGroup:                      data.MRPGroup,
+		ReorderThresholdQuantity:      data.ReorderThresholdQuantity,
+		PlanningTimeFence:             data.PlanningTimeFence,
+		LotSizeRoundingQuantity:       data.LotSizeRoundingQuantity,
+		MinimumLotSizeQuantity:        data.MinimumLotSizeQuantity,
+		MaximumLotSizeQuantity:        data.MaximumLotSizeQuantity,
+		MaximumStockQuantity:          data.MaximumStockQuantity,
+		DfltStorageLocationExtProcmt:  data.DfltStorageLocationExtProcmt,
+		MRPPlanningCalendar:           data.MRPPlanningCalendar,
+		SafetyStockQuantity:           data.SafetyStockQuantity,
+		SafetyDuration:                data.SafetyDuration,
+		FixedLotSizeQuantity:          data.FixedLotSizeQuantity,
+		PlannedDeliveryDurationInDays: data.PlannedDeliveryDurationInDays,
+		StorageLocation:               data.StorageLocation,
+		IsMarkedForDeletion:           data.IsMarkedForDeletion,
+	}
+	return mRPArea, nil
+}
+
+func ConvertToWorkScheduling(sdc *api_input_reader.SDC, rows *sql.Rows) (*WorkScheduling, error) {
+	pm := &requests.WorkScheduling{}
+
+	for i := 0; true; i++ {
+		if !rows.Next() {
+			if i == 0 {
+				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
+			} else {
+				break
+			}
+		}
+		err := rows.Scan(
+			&pm.Product,
+			&pm.BusinessPartner,
+			&pm.Plant,
+			&pm.ProductionInvtryManagedLoc,
+			&pm.ProductProcessingTime,
+			&pm.ProductionSupervisor,
+			&pm.ProductProductionQuantityUnit,
+			&pm.ProdnOrderIsBatchRequired,
+			&pm.MatlCompIsMarkedForBackflush,
+			&pm.ProductionSchedulingProfile,
+			&pm.IsMarkedForDeletion,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return nil, err
+		}
+	}
+	data := pm
+
+	workScheduling := &WorkScheduling{
+		Product:                       data.Product,
+		BusinessPartner:               data.BusinessPartner,
+		Plant:                         data.Plant,
+		ProductionInvtryManagedLoc:    data.ProductionInvtryManagedLoc,
+		ProductProcessingTime:         data.ProductProcessingTime,
+		ProductionSupervisor:          data.ProductionSupervisor,
+		ProductProductionQuantityUnit: data.ProductProductionQuantityUnit,
+		ProdnOrderIsBatchRequired:     data.ProdnOrderIsBatchRequired,
+		MatlCompIsMarkedForBackflush:  data.MatlCompIsMarkedForBackflush,
+		ProductionSchedulingProfile:   data.ProductionSchedulingProfile,
+		IsMarkedForDeletion:           data.IsMarkedForDeletion,
+	}
+	return workScheduling, nil
+}

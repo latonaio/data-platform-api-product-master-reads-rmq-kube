@@ -37,6 +37,7 @@
 			"BusinessPartner": null,
 			"ValidityEndDate": "",
 			"ValidityStartDate": "",
+			"BusinessPartnerProduct": "",
 			"IsMarkedForDeletion": null,
 			"BPPlant": {
 				"Plant": "",

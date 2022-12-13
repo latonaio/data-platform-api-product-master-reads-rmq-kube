@@ -2,7 +2,7 @@ package requests
 
 type Procurement struct {
 	Product                     string `json:"Product"`
-	BusinessPartner             *int   `json:"BusinessPartner"`
+	BusinessPartner             int    `json:"BusinessPartner"`
 	Plant                       string `json:"Plant"`
 	Buyable                     *bool  `json:"Buyable"`
 	IsAutoPurOrdCreationAllowed *bool  `json:"IsAutoPurOrdCreationAllowed"`

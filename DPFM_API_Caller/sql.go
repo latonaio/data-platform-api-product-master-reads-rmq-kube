@@ -173,7 +173,7 @@ func (c *DPFMAPICaller) BusinessPartner(
 	businessPartner := input.General.BusinessPartner.BusinessPartner
 
 	rows, err := c.db.Query(
-		`SELECT Product, BusinessPartner, ValidityEndDate, ValidityStartDate, IsMarkedForDeletion
+		`SELECT Product, BusinessPartner, ValidityEndDate, ValidityStartDate, BusinessPartnerProduct, IsMarkedForDeletion
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_business_partner_data
 		WHERE (Product, BusinessPartner) = (?, ?);`, product, businessPartner,
 	)

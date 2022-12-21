@@ -202,9 +202,12 @@ func (c *DPFMAPICaller) BPPlant(
 	businessPartner := input.General.BusinessPartner.BusinessPartner
 
 	rows, err := c.db.Query(
-		`SELECT Product, BusinessPartner, Plant, Issuable, Receivable, IssuingStorageLocation, ReceivingStorageLocation, 
-		AvailabilityCheckType, ProfitCenter, MRPType, MRPResponsible, MinimumLotSizeQuantity, MaximumLotSizeQuantity, 
-		FixedLotSizeQuantity, IsBatchManagementRequired, ProcurementType, InventoryUnit, IsMarkedForDeletion
+		`SELECT Product, BusinessPartner, Plant, AvailabilityCheckType, ProfitCenter, MRPType, MRPController, 
+		ReorderThresholdQuantity, PlanningTimeFence, MRPPlanningCalendar, SafetyStockQuantityInBaseUnit, 
+		SafetyDuration, MaximumStockQuantityInBaseUnit, MinumumDeliveryQuantityInBaseUnit, MinumumDeliveryLotSizeQuantityInBaseUnit, 
+		StandardDeliveryLotSizeQuantityInBaseUnit, DeliveryLotSizeRoundingQuantityInBaseUnit, MaximumDeliveryLotSizeQuantityInBaseUnit, 
+		MaximumDeliveryQuantityInBaseUnit, DeliveryLotSizeIsFixed, StandardDeliveryDurationInDays, IsBatchManagementRequired, 
+		BatchManagementPolicy, InventoryUnit, IsMarkedForDeletion
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_bp_plant_data
 		WHERE (Product, BusinessPartner) = (?, ?);`, product, businessPartner,
 	)
@@ -295,11 +298,11 @@ func (c *DPFMAPICaller) MRPArea(
 	plant := input.General.BusinessPartner.BPPlant.Plant
 
 	rows, err := c.db.Query(
-		`SELECT Product, BusinessPartner, Plant, MRPArea, MRPType, MRPResponsible, MRPGroup, 
-		ReorderThresholdQuantity, PlanningTimeFence, LotSizeRoundingQuantity, MinimumLotSizeQuantity, 
-		MaximumLotSizeQuantity, MaximumStockQuantity, DfltStorageLocationExtProcmt, MRPPlanningCalendar, 
-		SafetyStockQuantity, SafetyDuration, FixedLotSizeQuantity, PlannedDeliveryDurationInDays, 
-		StorageLocation, IsMarkedForDeletion
+		`SELECT Product, BusinessPartner, Plant, MRPArea, StorageLocationForMRP, MRPType, MRPController, 
+		ReorderThresholdQuantity, PlanningTimeFence, MRPPlanningCalendar, SafetyStockQuantityInBaseUnit, 
+		SafetyDuration, MaximumStockQuantityInBaseUnit, MinumumDeliveryQuantityInBaseUnit, MinumumDeliveryLotSizeQuantityInBaseUnit, 
+		StandardDeliveryLotSizeQuantityInBaseUnit, DeliveryLotSizeRoundingQuantityInBaseUnit, MaximumDeliveryLotSizeQuantityInBaseUnit, 
+		MaximumDeliveryQuantityInBaseUnit, DeliveryLotSizeIsFixed, StandardDeliveryDurationInDays, IsMarkedForDeletion
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_mrp_area_data
 		WHERE (Product, BusinessPartner, Plant) = (?, ?, ?);`, product, businessPartner, plant,
 	)

@@ -86,24 +86,31 @@ type BusinessPartner struct {
 }
 
 type BPPlant struct {
-	Product                   string  `json:"Product"`
-	BusinessPartner           int     `json:"BusinessPartner"`
-	Plant                     string  `json:"Plant"`
-	Issuable                  *bool   `json:"Issuable"`
-	Receivable                *bool   `json:"Receivable"`
-	IssuingStorageLocation    *string `json:"IssuingStorageLocation"`
-	ReceivingStorageLocation  *string `json:"ReceivingStorageLocation"`
-	AvailabilityCheckType     *string `json:"AvailabilityCheckType"`
-	ProfitCenter              *string `json:"ProfitCenter"`
-	MRPType                   *string `json:"MRPType"`
-	MRPResponsible            *string `json:"MRPResponsible"`
-	MinimumLotSizeQuantity    *string `json:"MinimumLotSizeQuantity"`
-	MaximumLotSizeQuantity    *string `json:"MaximumLotSizeQuantity"`
-	FixedLotSizeQuantity      *string `json:"FixedLotSizeQuantity"`
-	IsBatchManagementRequired *bool   `json:"IsBatchManagementRequired"`
-	ProcurementType           *string `json:"ProcurementType"`
-	InventoryUnit             *string `json:"InventoryUnit"`
-	IsMarkedForDeletion       *bool   `json:"IsMarkedForDeletion"`
+	Product                                   string   `json:"Product"`
+	BusinessPartner                           int      `json:"BusinessPartner"`
+	Plant                                     string   `json:"Plant"`
+	AvailabilityCheckType                     *string  `json:"AvailabilityCheckType"`
+	ProfitCenter                              *string  `json:"ProfitCenter"`
+	MRPType                                   *string  `json:"MRPType"`
+	MRPController                             *string  `json:"MRPController"`
+	ReorderThresholdQuantity                  *float32 `json:"ReorderThresholdQuantity"`
+	PlanningTimeFence                         *int     `json:"PlanningTimeFence"`
+	MRPPlanningCalendar                       *string  `json:"MRPPlanningCalendar"`
+	SafetyStockQuantityInBaseUnit             *float32 `json:"SafetyStockQuantityInBaseUnit"`
+	SafetyDuration                            *int     `json:"SafetyDuration"`
+	MaximumStockQuantityInBaseUnit            *float32 `json:"MaximumStockQuantityInBaseUnit"`
+	MinumumDeliveryQuantityInBaseUnit         *float32 `json:"MinumumDeliveryQuantityInBaseUnit"`
+	MinumumDeliveryLotSizeQuantityInBaseUnit  *float32 `json:"MinumumDeliveryLotSizeQuantityInBaseUnit"`
+	StandardDeliveryLotSizeQuantityInBaseUnit *float32 `json:"StandardDeliveryLotSizeQuantityInBaseUnit"`
+	DeliveryLotSizeRoundingQuantityInBaseUnit *float32 `json:"DeliveryLotSizeRoundingQuantityInBaseUnit"`
+	MaximumDeliveryLotSizeQuantityInBaseUnit  *float32 `json:"MaximumDeliveryLotSizeQuantityInBaseUnit"`
+	MaximumDeliveryQuantityInBaseUnit         *float32 `json:"MaximumDeliveryQuantityInBaseUnit"`
+	DeliveryLotSizeIsFixed                    *bool    `json:"DeliveryLotSizeIsFixed"`
+	StandardDeliveryDurationInDays            *int     `json:"StandardDeliveryDurationInDays"`
+	IsBatchManagementRequired                 *bool    `json:"IsBatchManagementRequired"`
+	BatchManagementPolicy                     *string  `json:"BatchManagementPolicy"`
+	InventoryUnit                             *string  `json:"InventoryUnit"`
+	IsMarkedForDeletion                       *bool    `json:"IsMarkedForDeletion"`
 }
 
 type BPPlantPDF struct {
@@ -137,27 +144,28 @@ type Procurement struct {
 }
 
 type MRPArea struct {
-	Product                       string   `json:"Product"`
-	BusinessPartner               int      `json:"BusinessPartner"`
-	Plant                         string   `json:"Plant"`
-	MRPArea                       *string  `json:"MRPArea"`
-	MRPType                       *string  `json:"MRPType"`
-	MRPResponsible                *string  `json:"MRPResponsible"`
-	MRPGroup                      *string  `json:"MRPGroup"`
-	ReorderThresholdQuantity      *float32 `json:"ReorderThresholdQuantity"`
-	PlanningTimeFence             *int     `json:"PlanningTimeFence"`
-	LotSizeRoundingQuantity       *float32 `json:"LotSizeRoundingQuantity"`
-	MinimumLotSizeQuantity        *float32 `json:"MinimumLotSizeQuantity"`
-	MaximumLotSizeQuantity        *float32 `json:"MaximumLotSizeQuantity"`
-	MaximumStockQuantity          *float32 `json:"MaximumStockQuantity"`
-	DfltStorageLocationExtProcmt  *string  `json:"DfltStorageLocationExtProcmt"`
-	MRPPlanningCalendar           *string  `json:"MRPPlanningCalendar"`
-	SafetyStockQuantity           *float32 `json:"SafetyStockQuantity"`
-	SafetyDuration                *int     `json:"SafetyDuration"`
-	FixedLotSizeQuantity          *float32 `json:"FixedLotSizeQuantity"`
-	PlannedDeliveryDurationInDays *int     `json:"PlannedDeliveryDurationInDays"`
-	StorageLocation               *string  `json:"StorageLocation"`
-	IsMarkedForDeletion           *bool    `json:"IsMarkedForDeletion"`
+	Product                                   string   `json:"Product"`
+	BusinessPartner                           int      `json:"BusinessPartner"`
+	Plant                                     string   `json:"Plant"`
+	MRPArea                                   string   `json:"MRPArea"`
+	StorageLocationForMRP                     *string  `json:"StorageLocationForMRP"`
+	MRPType                                   *string  `json:"MRPType"`
+	MRPController                             *string  `json:"MRPController"`
+	ReorderThresholdQuantity                  *float32 `json:"ReorderThresholdQuantity"`
+	PlanningTimeFence                         *int     `json:"PlanningTimeFence"`
+	MRPPlanningCalendar                       *string  `json:"MRPPlanningCalendar"`
+	SafetyStockQuantityInBaseUnit             *float32 `json:"SafetyStockQuantityInBaseUnit"`
+	SafetyDuration                            *int     `json:"SafetyDuration"`
+	MaximumStockQuantityInBaseUnit            *float32 `json:"MaximumStockQuantityInBaseUnit"`
+	MinumumDeliveryQuantityInBaseUnit         *float32 `json:"MinumumDeliveryQuantityInBaseUnit"`
+	MinumumDeliveryLotSizeQuantityInBaseUnit  *float32 `json:"MinumumDeliveryLotSizeQuantityInBaseUnit"`
+	StandardDeliveryLotSizeQuantityInBaseUnit *float32 `json:"StandardDeliveryLotSizeQuantityInBaseUnit"`
+	DeliveryLotSizeRoundingQuantityInBaseUnit *float32 `json:"DeliveryLotSizeRoundingQuantityInBaseUnit"`
+	MaximumDeliveryLotSizeQuantityInBaseUnit  *float32 `json:"MaximumDeliveryLotSizeQuantityInBaseUnit"`
+	MaximumDeliveryQuantityInBaseUnit         *float32 `json:"MaximumDeliveryQuantityInBaseUnit"`
+	DeliveryLotSizeIsFixed                    *bool    `json:"DeliveryLotSizeIsFixed"`
+	StandardDeliveryDurationInDays            *int     `json:"StandardDeliveryDurationInDays"`
+	IsMarkedForDeletion                       *bool    `json:"IsMarkedForDeletion"`
 }
 
 type WorkScheduling struct {

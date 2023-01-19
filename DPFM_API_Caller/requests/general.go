@@ -16,6 +16,7 @@ type General struct {
 	LastChangeDate                *string  `json:"LastChangeDate"`
 	NetWeight                     *float32 `json:"NetWeight"`
 	CountryOfOrigin               *string  `json:"CountryOfOrigin"`
+	CountryOfOriginLanguage       *string  `json:"CountryOfOriginLanguage"`
 	ItemCategory                  *string  `json:"ItemCategory"`
 	ProductAccountAssignmentGroup *string  `json:"ProductAccountAssignmentGroup"`
 	IsMarkedForDeletion           *bool    `json:"IsMarkedForDeletion"`

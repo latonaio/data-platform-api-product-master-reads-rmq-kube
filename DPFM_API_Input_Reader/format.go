@@ -22,21 +22,13 @@ func (sdc *SDC) ConvertToGeneral() *requests.General {
 		LastChangeDate:                data.LastChangeDate,
 		NetWeight:                     data.NetWeight,
 		CountryOfOrigin:               data.CountryOfOrigin,
+		CountryOfOriginLanguage:       data.CountryOfOriginLanguage,
 		ItemCategory:                  data.ItemCategory,
 		ProductAccountAssignmentGroup: data.ProductAccountAssignmentGroup,
 		IsMarkedForDeletion:           data.IsMarkedForDeletion,
-	}
-}
-
-func (sdc *SDC) ConvertToGeneralPDF() *requests.GeneralPDF {
-	dataGeneral := sdc.General
-	data := sdc.General.GeneralPDF
-	return &requests.GeneralPDF{
-		Product:      dataGeneral.Product,
-		DocType:      data.DocType,
-		DocVersionID: data.DocVersionID,
-		DocID:        data.DocID,
-		FileName:     data.FileName,
+		BusinessPartner:               data.BusinessPartner,
+		ProductDescription:            data.ProductDescription,
+		Tax:                           data.Tax,
 	}
 }
 
@@ -50,22 +42,8 @@ func (sdc *SDC) ConvertToBusinessPartner() *requests.BusinessPartner {
 		ValidityStartDate:      data.ValidityStartDate,
 		BusinessPartnerProduct: data.BusinessPartnerProduct,
 		IsMarkedForDeletion:    data.IsMarkedForDeletion,
-	}
-}
-
-func (sdc *SDC) ConvertToProcurement() *requests.Procurement {
-	dataGeneral := sdc.General
-	dataBusinessPartner := sdc.General.BusinessPartner
-	dataBPPlant := sdc.General.BusinessPartner.BPPlant
-	data := sdc.General.BusinessPartner.BPPlant.Procurement
-	return &requests.Procurement{
-		Product:                     dataGeneral.Product,
-		BusinessPartner:             dataBusinessPartner.BusinessPartner,
-		Plant:                       dataBPPlant.Plant,
-		Buyable:                     data.Buyable,
-		IsAutoPurOrdCreationAllowed: data.IsAutoPurOrdCreationAllowed,
-		IsSourceListRequired:        data.IsSourceListRequired,
-		IsMarkedForDeletion:         data.IsMarkedForDeletion,
+		BPPlant:                data.BPPlant,
+		ProductDescByBP:        data.ProductDescByBP,
 	}
 }
 
@@ -74,22 +52,20 @@ func (sdc *SDC) ConvertToBPPlant() *requests.BPPlant {
 	dataBusinessPartner := sdc.General.BusinessPartner
 	data := sdc.General.BusinessPartner.BPPlant
 	return &requests.BPPlant{
-		Product:                                  dataGeneral.Product,
-		BusinessPartner:                          dataBusinessPartner.BusinessPartner,
-		Plant:                                    data.Plant,
-		AvailabilityCheckType:                    data.AvailabilityCheckType,
-		ProfitCenter:                             data.ProfitCenter,
-		MRPType:                                  data.MRPType,
-		MRPController:                            data.MRPController,
-		ReorderThresholdQuantity:                 data.ReorderThresholdQuantity,
-		PlanningTimeFence:                        data.PlanningTimeFence,
-		MRPPlanningCalendar:                      data.MRPPlanningCalendar,
-		SafetyStockQuantityInBaseUnit:            data.SafetyStockQuantityInBaseUnit,
-		SafetyDuration:                           data.SafetyDuration,
-		MaximumStockQuantityInBaseUnit:           data.MaximumStockQuantityInBaseUnit,
-		MinumumDeliveryQuantityInBaseUnit:        data.MinumumDeliveryQuantityInBaseUnit,
-		MinumumDeliveryLotSizeQuantityInBaseUnit: data.MinumumDeliveryLotSizeQuantityInBaseUnit,
-		StandardDeliveryLotSizeQuantityInBaseUnit: data.StandardDeliveryLotSizeQuantityInBaseUnit,
+		Product:                                   data.Product,
+		BusinessPartner:                           data.BusinessPartner,
+		Plant:                                     data.Plant,
+		AvailabilityCheckType:                     data.AvailabilityCheckType,
+		MRPType:                                   data.MRPType,
+		MRPController:                             data.MRPController,
+		ReorderThresholdQuantity:                  data.ReorderThresholdQuantity,
+		PlanningTimeFence:                         data.PlanningTimeFence,
+		MRPPlanningCalender:                       data.MRPPlanningCalender,
+		SafetyStockQuantityInBaseUnit:             data.SafetyStockQuantityInBaseUnit,
+		SafetyDuration:                            data.SafetyDuration,
+		MaximumStockQuantityInBaseUnit:            data.MaximumStockQuantityInBaseUnit,
+		MinimumDeliveryQuantityInBaseUnit:         data.MinimumDeliveryQuantityInBaseUnit,
+		MinimumDeliveryLotSizeQuantityInBaseUnit:  data.MinimumDeliveryLotSizeQuantityInBaseUnit,
 		DeliveryLotSizeRoundingQuantityInBaseUnit: data.DeliveryLotSizeRoundingQuantityInBaseUnit,
 		MaximumDeliveryLotSizeQuantityInBaseUnit:  data.MaximumDeliveryLotSizeQuantityInBaseUnit,
 		MaximumDeliveryQuantityInBaseUnit:         data.MaximumDeliveryQuantityInBaseUnit,
@@ -98,54 +74,75 @@ func (sdc *SDC) ConvertToBPPlant() *requests.BPPlant {
 		IsBatchManagementRequired:                 data.IsBatchManagementRequired,
 		BatchManagementPolicy:                     data.BatchManagementPolicy,
 		InventoryUnit:                             data.InventoryUnit,
+		ProfitCenter:                              data.ProfitCenter,
+		IsMarkedForDeletion:                       data.IsMarkedForDeletion,
+		StorageLocation:                           data.StorageLocation,
+		MRPArea:                                   data.MRPArea,
+		WorkScheduling:                            data.WorkScheduling,
+		Accounting:                                data.Accounting,
+	}
+}
+
+func (sdc *SDC) ConvertToStorageLocation() *requests.StorageLocation {
+	dataGeneral := sdc.General
+	data := sdc.General.StorageLocation
+	return &requests.StorageLocation{
+		Product:              dataGeneral.Product,
+		BusinessPartner:      data.BusinessPartner,
+		Plant:                data.Plant,
+		StorageLocation:      data.StorageLocation,
+		CreationDate:         data.CreationDate,
+		InventoryBlockStatus: data.InventoryBlockStatus,
+		IsMarkedForDeletion:  data.IsMarkedForDeletion,
+	}
+}
+
+func (sdc *SDC) ConvertToMRPArea() *requests.MRPArea {
+	dataGeneral := sdc.General
+	data := sdc.General.MRPArea
+	return &requests.MRPArea{
+		Product:                                  dataGeneral.Product,
+		BusinessPartner:                          dataBusinessPartner.BusinessPartner,
+		Plant:                                    dataBPPlant.Plant,
+		MRPArea:                                  data.MRPArea,
+		StorageLocationForMRP:                    data.StorageLocationForMRP,
+		MRPType:                                  data.MRPType,
+		MRPController:                            data.MRPController,
+		ReorderThresholdQuantity:                 data.ReorderThresholdQuantity,
+		PlanningTimeFence:                        data.PlanningTimeFence,
+		MRPPlanningCalendar:                      data.MRPPlanningCalendar,
+		SafetyStockQuantityInBaseUnit:            data.SafetyStockQuantityInBaseUnit,
+		SafetyDuration:                           data.SafetyDuration,
+		MaximumStockQuantityInBaseUnit:           data.MaximumStockQuantityInBaseUnit,
+		MinimumDeliveryQuantityInBaseUnit:        data.MinimumDeliveryQuantityInBaseUnit,
+		MinimumDeliveryLotSizeQuantityInBaseUnit: data.MinimumDeliveryLotSizeQuantityInBaseUnit,
+		StandardDeliveryLotSizeQuantityInBaseUnit: data.StandardDeliveryLotSizeQuantityInBaseUnit,
+		DeliveryLotSizeRoundingQuantityInBaseUnit: data.DeliveryLotSizeRoundingQuantityInBaseUnit,
+		MaximumDeliveryLotSizeQuantityInBaseUnit:  data.MaximumDeliveryLotSizeQuantityInBaseUnit,
+		MaximumDeliveryQuantityInBaseUnit:         data.MaximumDeliveryQuantityInBaseUnit,
+		DeliveryLotSizeIsFixed:                    data.DeliveryLotSizeIsFixed,
+		StandardDeliveryDurationInDays:            data.StandardDeliveryDurationInDays,
 		IsMarkedForDeletion:                       data.IsMarkedForDeletion,
 	}
 }
 
-func (sdc *SDC) ConvertToProductDescription() *requests.ProductDescription {
-	dataGeneral := sdc.General
-	data := sdc.General.ProductDescription
-	return &requests.ProductDescription{
-		Product:            dataGeneral.Product,
-		Language:           data.Language,
-		ProductDescription: data.ProductDescription,
-	}
-}
-
-func (sdc *SDC) ConvertToTax() *requests.Tax {
+func (sdc *SDC) ConvertToWorkScheduling() *requests.WorkScheduling {
 	dataGeneral := sdc.General
 	dataBusinessPartner := sdc.General.BusinessPartner
-	data := sdc.General.BusinessPartner.Tax
-	return &requests.Tax{
-		Product:                  dataGeneral.Product,
-		BusinessPartner:          dataBusinessPartner.BusinessPartner,
-		Country:                  data.Country,
-		TaxCategory:              data.TaxCategory,
-		ProductTaxClassification: data.ProductTaxClassification,
-	}
-}
-
-func (sdc *SDC) ConvertToSales() *requests.Sales {
-	dataGeneral := sdc.General
-	dataBusinessPartner := sdc.General.BusinessPartner
-	data := sdc.General.BusinessPartner.Sales
-	return &requests.Sales{
-		Product:             dataGeneral.Product,
-		BusinessPartner:     dataBusinessPartner.BusinessPartner,
-		Sellable:            data.Sellable,
-		IsMarkedForDeletion: data.IsMarkedForDeletion,
-	}
-}
-
-func (sdc *SDC) ConvertToProductDescriptionByBusinessPartner() *requests.ProductDescriptionByBusinessPartner {
-	dataGeneral := sdc.General
-	dataBusinessPartner := sdc.General.BusinessPartner
-	data := sdc.General.ProductDescriptionByBusinessPartner
-	return &requests.ProductDescriptionByBusinessPartner{
-		Product:            dataGeneral.Product,
-		BusinessPartner:    dataBusinessPartner.BusinessPartner,
-		Language:           data.Language,
-		ProductDescription: data.ProductDescription,
+	dataBPPlant := sdc.General.BusinessPartner.BPPlant
+	data := sdc.General.BusinessPartner.BPPlant.WorkScheduling
+	return &requests.WorkScheduling{
+		Product:                       dataGeneral.Product,
+		BusinessPartner:               dataBusinessPartner.BusinessPartner,
+		Plant:                         dataBPPlant.Plant,
+		ProductionInvtryManagedLoc:    data.ProductionInvtryManagedLoc,
+		ProductProcessingTime:         data.ProductProcessingTime,
+		ProductionSupervisor:          data.ProductionSupervisor,
+		ProductProductionQuantityUnit: data.ProductProductionQuantityUnit,
+		ProdnOrderIsBatchRequired:     data.ProdnOrderIsBatchRequired,
+		MatlCompIsMarkedForBackflush:  data.MatlCompIsMarkedForBackflush,
+		ProductionSchedulingProfile:   data.ProductionSchedulingProfile,
+		IsMarkedForDeletion:           data.IsMarkedForDeletion,
 	}
 }
 
@@ -168,69 +165,37 @@ func (sdc *SDC) ConvertToAccounting() *requests.Accounting {
 	}
 }
 
-func (sdc *SDC) ConvertToMRPArea() *requests.MRPArea {
+func (sdc *SDC) ConvertToProductDescription() *requests.ProductDescription {
 	dataGeneral := sdc.General
 	dataBusinessPartner := sdc.General.BusinessPartner
-	dataBPPlant := sdc.General.BusinessPartner.BPPlant
-	data := sdc.General.BusinessPartner.BPPlant.MRPArea
-	return &requests.MRPArea{
-		Product:                                  dataGeneral.Product,
-		BusinessPartner:                          dataBusinessPartner.BusinessPartner,
-		Plant:                                    dataBPPlant.Plant,
-		MRPArea:                                  data.MRPArea,
-		StorageLocationForMRP:                    data.StorageLocationForMRP,
-		MRPType:                                  data.MRPType,
-		MRPController:                            data.MRPController,
-		ReorderThresholdQuantity:                 data.ReorderThresholdQuantity,
-		PlanningTimeFence:                        data.PlanningTimeFence,
-		MRPPlanningCalendar:                      data.MRPPlanningCalendar,
-		SafetyStockQuantityInBaseUnit:            data.SafetyStockQuantityInBaseUnit,
-		SafetyDuration:                           data.SafetyDuration,
-		MaximumStockQuantityInBaseUnit:           data.MaximumStockQuantityInBaseUnit,
-		MinumumDeliveryQuantityInBaseUnit:        data.MinumumDeliveryQuantityInBaseUnit,
-		MinumumDeliveryLotSizeQuantityInBaseUnit: data.MinumumDeliveryLotSizeQuantityInBaseUnit,
-		StandardDeliveryLotSizeQuantityInBaseUnit: data.StandardDeliveryLotSizeQuantityInBaseUnit,
-		DeliveryLotSizeRoundingQuantityInBaseUnit: data.DeliveryLotSizeRoundingQuantityInBaseUnit,
-		MaximumDeliveryLotSizeQuantityInBaseUnit:  data.MaximumDeliveryLotSizeQuantityInBaseUnit,
-		MaximumDeliveryQuantityInBaseUnit:         data.MaximumDeliveryQuantityInBaseUnit,
-		DeliveryLotSizeIsFixed:                    data.DeliveryLotSizeIsFixed,
-		StandardDeliveryDurationInDays:            data.StandardDeliveryDurationInDays,
-		IsMarkedForDeletion:                       data.IsMarkedForDeletion,
+	data := sdc.General.ProductDescription
+	return &requests.ProductDescription{
+		Product:            dataGeneral.Product,
+		Language:           data.Language,
+		ProductDescription: data.ProductDescription,
 	}
 }
 
-func (sdc *SDC) ConvertToStorageLocation() *requests.StorageLocation {
+func (sdc *SDC) ConvertToProductDescriptionByBusinessPartner() *requests.ProductDescriptionByBusinessPartner {
 	dataGeneral := sdc.General
 	dataBusinessPartner := sdc.General.BusinessPartner
-	dataBPPlant := sdc.General.BusinessPartner.BPPlant
-	data := sdc.General.BusinessPartner.BPPlant.StorageLocation
-	return &requests.StorageLocation{
-		Product:              dataGeneral.Product,
-		BusinessPartner:      dataBusinessPartner.BusinessPartner,
-		Plant:                dataBPPlant.Plant,
-		StorageLocation:      data.StorageLocation,
-		CreationDate:         data.CreationDate,
-		InventoryBlockStatus: data.InventoryBlockStatus,
-		IsMarkedForDeletion:  data.IsMarkedForDeletion,
+	data := sdc.General.ProductDescriptionByBusinessPartner
+	return &requests.ProductDescriptionByBusinessPartner{
+		Product:            dataGeneral.Product,
+		BusinessPartner:    dataBusinessPartner.BusinessPartner,
+		Language:           data.Language,
+		ProductDescription: data.ProductDescription,
 	}
 }
 
-func (sdc *SDC) ConvertToWorkScheduling() *requests.WorkScheduling {
+func (sdc *SDC) ConvertToTax() *requests.Tax {
 	dataGeneral := sdc.General
 	dataBusinessPartner := sdc.General.BusinessPartner
-	dataBPPlant := sdc.General.BusinessPartner.BPPlant
-	data := sdc.General.BusinessPartner.BPPlant.WorkScheduling
-	return &requests.WorkScheduling{
-		Product:                       dataGeneral.Product,
-		BusinessPartner:               dataBusinessPartner.BusinessPartner,
-		Plant:                         dataBPPlant.Plant,
-		ProductionInvtryManagedLoc:    data.ProductionInvtryManagedLoc,
-		ProductProcessingTime:         data.ProductProcessingTime,
-		ProductionSupervisor:          data.ProductionSupervisor,
-		ProductProductionQuantityUnit: data.ProductProductionQuantityUnit,
-		ProdnOrderIsBatchRequired:     data.ProdnOrderIsBatchRequired,
-		MatlCompIsMarkedForBackflush:  data.MatlCompIsMarkedForBackflush,
-		ProductionSchedulingProfile:   data.ProductionSchedulingProfile,
-		IsMarkedForDeletion:           data.IsMarkedForDeletion,
+	data := sdc.General.BusinessPartner.Tax
+	return &requests.Tax{
+		Product:                  dataGeneral.Product,
+		Country:                  data.Country,
+		ProductTaxCategory:       data.ProductTaxCategory,
+		ProductTaxClassification: data.ProductTaxClassification,
 	}
 }

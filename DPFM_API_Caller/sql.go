@@ -114,7 +114,7 @@ func (c *DPFMAPICaller) General(
 	rows, err := c.db.Query(
 		`SELECT Product, ProductType, BaseUnit, ValidityStartDate, ProductGroup, Division, GrossWeight, WeightUnit,
 		SizeOrDimensionText, IndustryStandardName, ProductStandardID, CreationDate, LastChangeDate, NetWeight,
-		CountryOfOrigin, ItemCategory, ProductAccountAssignmentGroup, IsMarkedForDeletion
+		CountryOfOrigin, ItemCategory, ProductAccountAssignmentGroup, IsMarkedForDeletion, BarcodeType
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_general_data
 		WHERE Product = ?;`, product,
 	)
@@ -204,7 +204,7 @@ func (c *DPFMAPICaller) BPPlant(
 	rows, err := c.db.Query(
 		`SELECT Product, BusinessPartner, Plant, AvailabilityCheckType, ProfitCenter, MRPType, MRPController, 
 		ReorderThresholdQuantity, PlanningTimeFence, MRPPlanningCalendar, SafetyStockQuantityInBaseUnit, 
-		SafetyDuration, MaximumStockQuantityInBaseUnit, MinumumDeliveryQuantityInBaseUnit, MinumumDeliveryLotSizeQuantityInBaseUnit, 
+		SafetyDuration, MaximumStockQuantityInBaseUnit, MinimumDeliveryQuantityInBaseUnit, MinimumDeliveryLotSizeQuantityInBaseUnit, 
 		StandardDeliveryLotSizeQuantityInBaseUnit, DeliveryLotSizeRoundingQuantityInBaseUnit, MaximumDeliveryLotSizeQuantityInBaseUnit, 
 		MaximumDeliveryQuantityInBaseUnit, DeliveryLotSizeIsFixed, StandardDeliveryDurationInDays, IsBatchManagementRequired, 
 		BatchManagementPolicy, InventoryUnit, IsMarkedForDeletion
@@ -300,7 +300,7 @@ func (c *DPFMAPICaller) MRPArea(
 	rows, err := c.db.Query(
 		`SELECT Product, BusinessPartner, Plant, MRPArea, StorageLocationForMRP, MRPType, MRPController, 
 		ReorderThresholdQuantity, PlanningTimeFence, MRPPlanningCalendar, SafetyStockQuantityInBaseUnit, 
-		SafetyDuration, MaximumStockQuantityInBaseUnit, MinumumDeliveryQuantityInBaseUnit, MinumumDeliveryLotSizeQuantityInBaseUnit, 
+		SafetyDuration, MaximumStockQuantityInBaseUnit, MinimumDeliveryQuantityInBaseUnit, MinimumDeliveryLotSizeQuantityInBaseUnit, 
 		StandardDeliveryLotSizeQuantityInBaseUnit, DeliveryLotSizeRoundingQuantityInBaseUnit, MaximumDeliveryLotSizeQuantityInBaseUnit, 
 		MaximumDeliveryQuantityInBaseUnit, DeliveryLotSizeIsFixed, StandardDeliveryDurationInDays, IsMarkedForDeletion
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_mrp_area_data

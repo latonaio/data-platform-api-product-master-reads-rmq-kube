@@ -4,6 +4,7 @@ import (
 	"context"
 	dpfm_api_input_reader "data-platform-api-product-master-reads-rmq-kube/DPFM_API_Input_Reader"
 	dpfm_api_output_formatter "data-platform-api-product-master-reads-rmq-kube/DPFM_API_Output_Formatter"
+	"strings"
 	"sync"
 
 	"github.com/latonaio/golang-logging-library-for-data-platform/logger"
@@ -19,17 +20,16 @@ func (c *DPFMAPICaller) readSqlProcess(
 	log *logger.Logger,
 ) interface{} {
 	var general *dpfm_api_output_formatter.General
+	var productDescription *dpfm_api_output_formatter.ProductDescription
+	var productDescriptions []*dpfm_api_output_formatter.ProductDescription
 	var productDescriptionByBusinessPartner *dpfm_api_output_formatter.ProductDescriptionByBusinessPartner
 	var businessPartner *dpfm_api_output_formatter.BusinessPartner
 	var bPPlant *dpfm_api_output_formatter.BPPlant
-	var tax *dpfm_api_output_formatter.Tax
-	var accounting *dpfm_api_output_formatter.Accounting
 	var mrpArea *dpfm_api_output_formatter.MRPArea
-	var procurement *dpfm_api_output_formatter.Procurement
-	var productDescription *dpfm_api_output_formatter.ProductDescription
-	var sales *dpfm_api_output_formatter.Sales
 	var storageLocation *dpfm_api_output_formatter.StorageLocation
 	var workScheduling *dpfm_api_output_formatter.WorkScheduling
+	var tax *dpfm_api_output_formatter.Tax
+	var accounting *dpfm_api_output_formatter.Accounting
 	for _, fn := range accepter {
 		switch fn {
 		case "General":
@@ -40,6 +40,14 @@ func (c *DPFMAPICaller) readSqlProcess(
 			func() {
 				productDescriptionByBusinessPartner = c.ProductDescriptionByBusinessPartner(mtx, input, output, errs, log)
 			}()
+		case "ProductDescription":
+			func() {
+				productDescription = c.ProductDescription(mtx, input, output, errs, log)
+			}()
+		case "ProductDescriptions":
+			func() {
+				productDescription = c.ProductDescription(mtx, input, output, errs, log)
+			}()
 		case "BusinessPartner":
 			func() {
 				businessPartner = c.BusinessPartner(mtx, input, output, errs, log)
@@ -48,29 +56,9 @@ func (c *DPFMAPICaller) readSqlProcess(
 			func() {
 				bPPlant = c.BPPlant(mtx, input, output, errs, log)
 			}()
-		case "Tax":
-			func() {
-				tax = c.Tax(mtx, input, output, errs, log)
-			}()
-		case "Accounting":
-			func() {
-				accounting = c.Accounting(mtx, input, output, errs, log)
-			}()
 		case "MRPArea":
 			func() {
 				mrpArea = c.MRPArea(mtx, input, output, errs, log)
-			}()
-		case "Procurement":
-			func() {
-				procurement = c.Procurement(mtx, input, output, errs, log)
-			}()
-		case "ProductDescription":
-			func() {
-				productDescription = c.ProductDescription(mtx, input, output, errs, log)
-			}()
-		case "Sales":
-			func() {
-				sales = c.Sales(mtx, input, output, errs, log)
 			}()
 		case "StorageLocation":
 			func() {
@@ -80,23 +68,30 @@ func (c *DPFMAPICaller) readSqlProcess(
 			func() {
 				workScheduling = c.WorkScheduling(mtx, input, output, errs, log)
 			}()
+		case "Tax":
+			func() {
+				tax = c.Tax(mtx, input, output, errs, log)
+			}()
+		case "Accounting":
+			func() {
+				accounting = c.Accounting(mtx, input, output, errs, log)
+			}()
 		default:
 		}
 	}
 
 	data := &dpfm_api_output_formatter.Message{
 		General:                             general,
+		ProductDescription:                  productDescription,
+		ProductDescriptions:                 productDescriptions,
 		ProductDescriptionByBusinessPartner: productDescriptionByBusinessPartner,
 		BusinessPartner:                     businessPartner,
 		BPPlant:                             bPPlant,
-		Tax:                                 tax,
-		Accounting:                          accounting,
 		MRPArea:                             mrpArea,
-		Procurement:                         procurement,
-		ProductDescription:                  productDescription,
-		Sales:                               sales,
 		StorageLocation:                     storageLocation,
 		WorkScheduling:                      workScheduling,
+		Tax:                                 tax,
+		Accounting:                          accounting,
 	}
 
 	return data
@@ -112,9 +107,9 @@ func (c *DPFMAPICaller) General(
 	product := input.General.Product
 
 	rows, err := c.db.Query(
-		`SELECT Product, ProductType, BaseUnit, ValidityStartDate, ProductGroup, Division, GrossWeight, WeightUnit,
-		SizeOrDimensionText, IndustryStandardName, ProductStandardID, CreationDate, LastChangeDate, NetWeight,
-		CountryOfOrigin, ItemCategory, ProductAccountAssignmentGroup, IsMarkedForDeletion, BarcodeType
+		`SELECT Product, ProductType, BaseUnit, ValidityStartDate, ProductGroup, GrossWeight, NetWeight, WeightUnit,
+		InternalCapacityQuantity, InternalCapacityQuantityUnit, SizeOrDimensionText, ProductStandardID, IndustryStandardName, ItemCategory, BarcodeType,
+		CountryOfOrigin, CountryOfOriginLanguage, ProductAccountAssignmentGroup, CreationDate, LastChangeDate, IsMarkedForDeletion,
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_general_data
 		WHERE Product = ?;`, product,
 	)
@@ -124,6 +119,70 @@ func (c *DPFMAPICaller) General(
 	}
 
 	data, err := dpfm_api_output_formatter.ConvertToGeneral(input, rows)
+	if err != nil {
+		*errs = append(*errs, err)
+		return nil
+	}
+
+	return data
+}
+
+func (c *DPFMAPICaller) ProductDescription(
+	mtx *sync.Mutex,
+	input *dpfm_api_input_reader.SDC,
+	output *dpfm_api_output_formatter.SDC,
+	errs *[]error,
+	log *logger.Logger,
+) *dpfm_api_output_formatter.ProductDescription {
+	product := input.General.Product
+	language := input.General.ProductDescription.Language
+
+	rows, err := c.db.Query(
+		`SELECT Product, Language, ProductDescription
+		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_product_description_data
+		WHERE (Product, Language) = (?, ?);`, product, language,
+	)
+	if err != nil {
+		*errs = append(*errs, err)
+		return nil
+	}
+
+	data, err := dpfm_api_output_formatter.ConvertToProductDescription(input, rows)
+	if err != nil {
+		*errs = append(*errs, err)
+		return nil
+	}
+
+	return data
+}
+
+func (c *DPFMAPICaller) ProductDescriptions(
+	mtx *sync.Mutex,
+	input *dpfm_api_input_reader.SDC,
+	output *dpfm_api_output_formatter.SDC,
+	errs *[]error,
+	log *logger.Logger,
+) *[]dpfm_api_output_formatter.ProductDescription {
+	var args []interface{}
+	products := input.General.Products
+
+	cnt := 0
+	for _, v := range products {
+		args = append(args, v)
+		cnt++
+	}
+	repeat := strings.Repeat("(?),", cnt-1) + "(?)"
+	rows, err := c.db.Query(
+		`SELECT *
+		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_product_description_data
+		WHERE Product IN ( `+repeat+` );`, args...,
+	)
+	if err != nil {
+		*errs = append(*errs, err)
+		return nil
+	}
+
+	data, err := dpfm_api_output_formatter.ConvertToProductDescriptions(input, rows)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
@@ -225,67 +284,6 @@ func (c *DPFMAPICaller) BPPlant(
 	return data
 }
 
-func (c *DPFMAPICaller) Tax(
-	mtx *sync.Mutex,
-	input *dpfm_api_input_reader.SDC,
-	output *dpfm_api_output_formatter.SDC,
-	errs *[]error,
-	log *logger.Logger,
-) *dpfm_api_output_formatter.Tax {
-	product := input.General.Product
-	businessPartner := input.General.BusinessPartner.BusinessPartner
-	country := input.General.BusinessPartner.Tax.Country
-
-	rows, err := c.db.Query(
-		`SELECT Product, BusinessPartner, Country, TaxCategory, ProductTaxClassification
-		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_tax_data
-		WHERE (Product, BusinessPartner, Country) = (?, ?, ?);`, product, businessPartner, country,
-	)
-	if err != nil {
-		*errs = append(*errs, err)
-		return nil
-	}
-
-	data, err := dpfm_api_output_formatter.ConvertToTax(input, rows)
-	if err != nil {
-		*errs = append(*errs, err)
-		return nil
-	}
-
-	return data
-}
-
-func (c *DPFMAPICaller) Accounting(
-	mtx *sync.Mutex,
-	input *dpfm_api_input_reader.SDC,
-	output *dpfm_api_output_formatter.SDC,
-	errs *[]error,
-	log *logger.Logger,
-) *dpfm_api_output_formatter.Accounting {
-	product := input.General.Product
-	businessPartner := input.General.BusinessPartner.BusinessPartner
-	plant := input.General.BusinessPartner.BPPlant.Plant
-
-	rows, err := c.db.Query(
-		`SELECT Product, BusinessPartner, Plant, ValuationClass, CostingPolicy, PriceUnitQty, StandardPrice, 
-		MovingAveragePrice, PriceLastChangeDate, IsMarkedForDeletion
-		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_accounting_data
-		WHERE (Product, BusinessPartner, Plant) = (?, ?, ?);`, product, businessPartner, plant,
-	)
-	if err != nil {
-		*errs = append(*errs, err)
-		return nil
-	}
-
-	data, err := dpfm_api_output_formatter.ConvertToAccounting(input, rows)
-	if err != nil {
-		*errs = append(*errs, err)
-		return nil
-	}
-
-	return data
-}
-
 func (c *DPFMAPICaller) MRPArea(
 	mtx *sync.Mutex,
 	input *dpfm_api_input_reader.SDC,
@@ -312,95 +310,6 @@ func (c *DPFMAPICaller) MRPArea(
 	}
 
 	data, err := dpfm_api_output_formatter.ConvertToMRPArea(input, rows)
-	if err != nil {
-		*errs = append(*errs, err)
-		return nil
-	}
-
-	return data
-}
-
-func (c *DPFMAPICaller) Procurement(
-	mtx *sync.Mutex,
-	input *dpfm_api_input_reader.SDC,
-	output *dpfm_api_output_formatter.SDC,
-	errs *[]error,
-	log *logger.Logger,
-) *dpfm_api_output_formatter.Procurement {
-	product := input.General.Product
-	businessPartner := input.General.BusinessPartner.BusinessPartner
-	plant := input.General.BusinessPartner.BPPlant.Plant
-
-	rows, err := c.db.Query(
-		`SELECT Product, BusinessPartner, Plant, Buyable, IsAutoPurOrdCreationAllowed, IsSourceListRequired, 
-		IsMarkedForDeletion
-		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_procurement_data
-		WHERE (Product, BusinessPartner, Plant) = (?, ?, ?);`, product, businessPartner, plant,
-	)
-	if err != nil {
-		*errs = append(*errs, err)
-		return nil
-	}
-
-	data, err := dpfm_api_output_formatter.ConvertToProcurement(input, rows)
-	if err != nil {
-		*errs = append(*errs, err)
-		return nil
-	}
-
-	return data
-}
-
-func (c *DPFMAPICaller) ProductDescription(
-	mtx *sync.Mutex,
-	input *dpfm_api_input_reader.SDC,
-	output *dpfm_api_output_formatter.SDC,
-	errs *[]error,
-	log *logger.Logger,
-) *dpfm_api_output_formatter.ProductDescription {
-	product := input.General.Product
-	language := input.General.ProductDescription.Language
-
-	rows, err := c.db.Query(
-		`SELECT Product, Language, ProductDescription
-		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_product_description_data
-		WHERE (Product, Language) = (?, ?);`, product, language,
-	)
-	if err != nil {
-		*errs = append(*errs, err)
-		return nil
-	}
-
-	data, err := dpfm_api_output_formatter.ConvertToProductDescription(input, rows)
-	if err != nil {
-		*errs = append(*errs, err)
-		return nil
-	}
-
-	return data
-}
-
-func (c *DPFMAPICaller) Sales(
-	mtx *sync.Mutex,
-	input *dpfm_api_input_reader.SDC,
-	output *dpfm_api_output_formatter.SDC,
-	errs *[]error,
-	log *logger.Logger,
-) *dpfm_api_output_formatter.Sales {
-	product := input.General.Product
-	businessPartner := input.General.BusinessPartner.BusinessPartner
-
-	rows, err := c.db.Query(
-		`SELECT Product, BusinessPartner, Sellable, IsMarkedForDeletion
-		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_sales_data
-		WHERE (Product, BusinessPartner) = (?, ?);`, product, businessPartner,
-	)
-	if err != nil {
-		*errs = append(*errs, err)
-		return nil
-	}
-
-	data, err := dpfm_api_output_formatter.ConvertToSales(input, rows)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
@@ -463,6 +372,67 @@ func (c *DPFMAPICaller) WorkScheduling(
 	}
 
 	data, err := dpfm_api_output_formatter.ConvertToWorkScheduling(input, rows)
+	if err != nil {
+		*errs = append(*errs, err)
+		return nil
+	}
+
+	return data
+}
+
+func (c *DPFMAPICaller) Tax(
+	mtx *sync.Mutex,
+	input *dpfm_api_input_reader.SDC,
+	output *dpfm_api_output_formatter.SDC,
+	errs *[]error,
+	log *logger.Logger,
+) *dpfm_api_output_formatter.Tax {
+	product := input.General.Product
+	businessPartner := input.General.BusinessPartner.BusinessPartner
+	country := input.General.BusinessPartner.Tax.Country
+
+	rows, err := c.db.Query(
+		`SELECT Product, BusinessPartner, Country, ProductTaxCategory, ProductTaxClassification
+		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_tax_data
+		WHERE (Product, BusinessPartner, Country) = (?, ?, ?);`, product, businessPartner, country,
+	)
+	if err != nil {
+		*errs = append(*errs, err)
+		return nil
+	}
+
+	data, err := dpfm_api_output_formatter.ConvertToTax(input, rows)
+	if err != nil {
+		*errs = append(*errs, err)
+		return nil
+	}
+
+	return data
+}
+
+func (c *DPFMAPICaller) Accounting(
+	mtx *sync.Mutex,
+	input *dpfm_api_input_reader.SDC,
+	output *dpfm_api_output_formatter.SDC,
+	errs *[]error,
+	log *logger.Logger,
+) *dpfm_api_output_formatter.Accounting {
+	product := input.General.Product
+	businessPartner := input.General.BusinessPartner.BusinessPartner
+	plant := input.General.BusinessPartner.BPPlant.Plant
+
+	rows, err := c.db.Query(
+		`SELECT Product, BusinessPartner, Plant, ValuationClass, CostingPolicy, PriceUnitQty, StandardPrice, 
+		MovingAveragePrice, PriceLastChangeDate, IsMarkedForDeletion
+		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_accounting_data
+		WHERE (Product, BusinessPartner, Plant) = (?, ?, ?);`, product, businessPartner, plant,
+	)
+	if err != nil {
+		*errs = append(*errs, err)
+		return nil
+	}
+
+	data, err := dpfm_api_output_formatter.ConvertToAccounting(input, rows)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil

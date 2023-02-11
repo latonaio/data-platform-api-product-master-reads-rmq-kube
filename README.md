@@ -20,11 +20,12 @@ data-platform-api-product-master-reads-rmq-kube には、次の API をコール
 
 * A_General（データ連携基盤 品目マスタ - 基本データ）
 * A_BPPlant（データ連携基盤 品目マスタ - ヘッダ取引先データ）
-* A_BusinessPartner（データ連携基盤 品目マスタ - ビジネスパートナデータ）
 * A_StorageLocation（データ連携基盤 品目マスタ - 保管場所データ）
+* A_Procurement（データ連携基盤 品目マスタ - 購買データ）
 * A_MRPArea（データ連携基盤 品目マスタ - MRPエリアデータ）
 * A_WorkScheduling（データ連携基盤 品目マスタ - 作業計画データ）
 * A_Accounting（データ連携基盤 品目マスタ - 会計データ）
+* A_Sales（データ連携基盤 品目マスタ - 販売データ）
 * A_Tax（データ連携基盤 品目マスタ - 税データ）
 * A_ProductDesc（データ連携基盤 品目マスタ - 品目テキストデータ）
 * A_ProductDescriptionByBusinessPartner（データ連携基盤 品目マスタ - ビジネスパートナ品目テキストデータ）

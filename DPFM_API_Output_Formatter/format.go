@@ -24,19 +24,21 @@ func ConvertToGeneral(sdc *api_input_reader.SDC, rows *sql.Rows) (*General, erro
 			&pm.BaseUnit,
 			&pm.ValidityStartDate,
 			&pm.ProductGroup,
-			&pm.Division,
 			&pm.GrossWeight,
-			&pm.WeightUnit,
-			&pm.SizeOrDimensionText,
-			&pm.IndustryStandardName,
-			&pm.ProductStandardID,
-			&pm.CreationDate,
-			&pm.LastChangeDate,
 			&pm.NetWeight,
+			&pm.WeightUnit,
+			&pm.InternalCapacityQuantity,
+			&pm.InternalCapacityQuantityUnit,
+			&pm.SizeOrDimensionText,
+			&pm.ProductStandardID,
+			&pm.IndustryStandardName,
+			&pm.ItemCategory,
+			&pm.BarcodeType,
 			&pm.CountryOfOrigin,
 			&pm.CountryOfOriginLanguage,
-			&pm.ItemCategory,
 			&pm.ProductAccountAssignmentGroup,
+			&pm.CreationDate,
+			&pm.LastChangeDate,
 			&pm.IsMarkedForDeletion,
 		)
 		if err != nil {
@@ -52,22 +54,57 @@ func ConvertToGeneral(sdc *api_input_reader.SDC, rows *sql.Rows) (*General, erro
 		BaseUnit:                      data.BaseUnit,
 		ValidityStartDate:             data.ValidityStartDate,
 		ProductGroup:                  data.ProductGroup,
-		Division:                      data.Division,
 		GrossWeight:                   data.GrossWeight,
-		WeightUnit:                    data.WeightUnit,
-		SizeOrDimensionText:           data.SizeOrDimensionText,
-		IndustryStandardName:          data.IndustryStandardName,
-		ProductStandardID:             data.ProductStandardID,
-		CreationDate:                  data.CreationDate,
-		LastChangeDate:                data.LastChangeDate,
 		NetWeight:                     data.NetWeight,
+		WeightUnit:                    data.WeightUnit,
+		InternalCapacityQuantity:      data.InternalCapacityQuantity,
+		InternalCapacityQuantityUnit:  data.InternalCapacityQuantityUnit,
+		SizeOrDimensionText:           data.SizeOrDimensionText,
+		ProductStandardID:             data.ProductStandardID,
+		IndustryStandardName:          data.IndustryStandardName,
+		ItemCategory:                  data.ItemCategory,
+		BarcodeType:                   data.BarcodeType,
 		CountryOfOrigin:               data.CountryOfOrigin,
 		CountryOfOriginLanguage:       data.CountryOfOriginLanguage,
-		ItemCategory:                  data.ItemCategory,
 		ProductAccountAssignmentGroup: data.ProductAccountAssignmentGroup,
+		CreationDate:                  data.CreationDate,
+		LastChangeDate:                data.LastChangeDate,
 		IsMarkedForDeletion:           data.IsMarkedForDeletion,
 	}
 	return general, nil
+}
+
+func ConvertToProductDescriptionByBusinessPartner(sdc *api_input_reader.SDC, rows *sql.Rows) (*ProductDescriptionByBusinessPartner, error) {
+	pm := &requests.ProductDescriptionByBusinessPartner{}
+
+	for i := 0; true; i++ {
+		if !rows.Next() {
+			if i == 0 {
+				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
+			} else {
+				break
+			}
+		}
+		err := rows.Scan(
+			&pm.Product,
+			&pm.BusinessPartner,
+			&pm.Language,
+			&pm.ProductDescription,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return nil, err
+		}
+	}
+	data := pm
+
+	productDescriptionByBusinessPartner := &ProductDescriptionByBusinessPartner{
+		Product:            data.Product,
+		BusinessPartner:    data.BusinessPartner,
+		Language:           data.Language,
+		ProductDescription: data.ProductDescription,
+	}
+	return productDescriptionByBusinessPartner, nil
 }
 
 func ConvertToBusinessPartner(sdc *api_input_reader.SDC, rows *sql.Rows) (*BusinessPartner, error) {
@@ -107,6 +144,67 @@ func ConvertToBusinessPartner(sdc *api_input_reader.SDC, rows *sql.Rows) (*Busin
 	return businessPartner, nil
 }
 
+func ConvertToProductDescription(sdc *api_input_reader.SDC, rows *sql.Rows) (*ProductDescription, error) {
+	pm := &requests.ProductDescription{}
+
+	for i := 0; true; i++ {
+		if !rows.Next() {
+			if i == 0 {
+				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
+			} else {
+				break
+			}
+		}
+		err := rows.Scan(
+			&pm.Product,
+			&pm.Language,
+			&pm.ProductDescription,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return nil, err
+		}
+	}
+	data := pm
+
+	productDescription := &ProductDescription{
+		Product:            data.Product,
+		Language:           data.Language,
+		ProductDescription: data.ProductDescription,
+	}
+	return productDescription, nil
+}
+
+func ConvertToProductDescriptions(sdc *api_input_reader.SDC, rows *sql.Rows) (*[]ProductDescription, error) {
+	pds := make([]ProductDescription, 0, len(sdc.General.Products))
+	for i := 0; true; i++ {
+		if !rows.Next() {
+			if i == 0 {
+				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
+			} else {
+				break
+			}
+		}
+		pd := requests.ProductDescription{}
+		err := rows.Scan(
+			&pd.Product,
+			&pd.Language,
+			&pd.ProductDescription,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return nil, err
+		}
+		pds = append(pds, ProductDescription{
+			Product:            pd.Product,
+			Language:           pd.Language,
+			ProductDescription: pd.ProductDescription,
+		})
+	}
+
+	return &pds, nil
+}
+
 func ConvertToBPPlant(sdc *api_input_reader.SDC, rows *sql.Rows) (*BPPlant, error) {
 	pm := &requests.BPPlant{}
 
@@ -123,16 +221,18 @@ func ConvertToBPPlant(sdc *api_input_reader.SDC, rows *sql.Rows) (*BPPlant, erro
 			&pm.BusinessPartner,
 			&pm.Plant,
 			&pm.AvailabilityCheckType,
+			&pm.ProfitCenter,
 			&pm.MRPType,
 			&pm.MRPController,
 			&pm.ReorderThresholdQuantity,
 			&pm.PlanningTimeFence,
-			&pm.MRPPlanningCalender,
+			&pm.MRPPlanningCalendar,
 			&pm.SafetyStockQuantityInBaseUnit,
 			&pm.SafetyDuration,
 			&pm.MaximumStockQuantityInBaseUnit,
 			&pm.MinimumDeliveryQuantityInBaseUnit,
 			&pm.MinimumDeliveryLotSizeQuantityInBaseUnit,
+			&pm.StandardDeliveryLotSizeQuantityInBaseUnit,
 			&pm.DeliveryLotSizeRoundingQuantityInBaseUnit,
 			&pm.MaximumDeliveryLotSizeQuantityInBaseUnit,
 			&pm.MaximumDeliveryQuantityInBaseUnit,
@@ -141,7 +241,6 @@ func ConvertToBPPlant(sdc *api_input_reader.SDC, rows *sql.Rows) (*BPPlant, erro
 			&pm.IsBatchManagementRequired,
 			&pm.BatchManagementPolicy,
 			&pm.InventoryUnit,
-			&pm.ProfitCenter,
 			&pm.IsMarkedForDeletion,
 		)
 		if err != nil {
@@ -152,20 +251,22 @@ func ConvertToBPPlant(sdc *api_input_reader.SDC, rows *sql.Rows) (*BPPlant, erro
 	data := pm
 
 	bPPlant := &BPPlant{
-		Product:                                   data.Product,
-		BusinessPartner:                           data.BusinessPartner,
-		Plant:                                     data.Plant,
-		AvailabilityCheckType:                     data.AvailabilityCheckType,
-		MRPType:                                   data.MRPType,
-		MRPController:                             data.MRPController,
-		ReorderThresholdQuantity:                  data.ReorderThresholdQuantity,
-		PlanningTimeFence:                         data.PlanningTimeFence,
-		MRPPlanningCalender:                       data.MRPPlanningCalender,
-		SafetyStockQuantityInBaseUnit:             data.SafetyStockQuantityInBaseUnit,
-		SafetyDuration:                            data.SafetyDuration,
-		MaximumStockQuantityInBaseUnit:            data.MaximumStockQuantityInBaseUnit,
-		MinimumDeliveryQuantityInBaseUnit:         data.MinimumDeliveryQuantityInBaseUnit,
-		MinimumDeliveryLotSizeQuantityInBaseUnit:  data.MinimumDeliveryLotSizeQuantityInBaseUnit,
+		Product:                                  data.Product,
+		BusinessPartner:                          data.BusinessPartner,
+		Plant:                                    data.Plant,
+		AvailabilityCheckType:                    data.AvailabilityCheckType,
+		ProfitCenter:                             data.ProfitCenter,
+		MRPType:                                  data.MRPType,
+		MRPController:                            data.MRPController,
+		ReorderThresholdQuantity:                 data.ReorderThresholdQuantity,
+		PlanningTimeFence:                        data.PlanningTimeFence,
+		MRPPlanningCalendar:                      data.MRPPlanningCalendar,
+		SafetyStockQuantityInBaseUnit:            data.SafetyStockQuantityInBaseUnit,
+		SafetyDuration:                           data.SafetyDuration,
+		MaximumStockQuantityInBaseUnit:           data.MaximumStockQuantityInBaseUnit,
+		MinimumDeliveryQuantityInBaseUnit:        data.MinimumDeliveryQuantityInBaseUnit,
+		MinimumDeliveryLotSizeQuantityInBaseUnit: data.MinimumDeliveryLotSizeQuantityInBaseUnit,
+		StandardDeliveryLotSizeQuantityInBaseUnit: data.StandardDeliveryLotSizeQuantityInBaseUnit,
 		DeliveryLotSizeRoundingQuantityInBaseUnit: data.DeliveryLotSizeRoundingQuantityInBaseUnit,
 		MaximumDeliveryLotSizeQuantityInBaseUnit:  data.MaximumDeliveryLotSizeQuantityInBaseUnit,
 		MaximumDeliveryQuantityInBaseUnit:         data.MaximumDeliveryQuantityInBaseUnit,
@@ -174,10 +275,87 @@ func ConvertToBPPlant(sdc *api_input_reader.SDC, rows *sql.Rows) (*BPPlant, erro
 		IsBatchManagementRequired:                 data.IsBatchManagementRequired,
 		BatchManagementPolicy:                     data.BatchManagementPolicy,
 		InventoryUnit:                             data.InventoryUnit,
-		ProfitCenter:                              data.ProfitCenter,
 		IsMarkedForDeletion:                       data.IsMarkedForDeletion,
 	}
 	return bPPlant, nil
+}
+
+func ConvertToTax(sdc *api_input_reader.SDC, rows *sql.Rows) (*Tax, error) {
+	pm := &requests.Tax{}
+
+	for i := 0; true; i++ {
+		if !rows.Next() {
+			if i == 0 {
+				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
+			} else {
+				break
+			}
+		}
+		err := rows.Scan(
+			&pm.Product,
+			&pm.Country,
+			&pm.ProductTaxCategory,
+			&pm.ProductTaxClassification,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return nil, err
+		}
+	}
+	data := pm
+
+	tax := &Tax{
+		Product:                  data.Product,
+		Country:                  data.Country,
+		ProductTaxCategory:       data.ProductTaxCategory,
+		ProductTaxClassification: data.ProductTaxClassification,
+	}
+	return tax, nil
+}
+
+func ConvertToAccounting(sdc *api_input_reader.SDC, rows *sql.Rows) (*Accounting, error) {
+	pm := &requests.Accounting{}
+
+	for i := 0; true; i++ {
+		if !rows.Next() {
+			if i == 0 {
+				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
+			} else {
+				break
+			}
+		}
+		err := rows.Scan(
+			&pm.Product,
+			&pm.BusinessPartner,
+			&pm.Plant,
+			&pm.ValuationClass,
+			&pm.CostingPolicy,
+			&pm.PriceUnitQty,
+			&pm.StandardPrice,
+			&pm.MovingAveragePrice,
+			&pm.PriceLastChangeDate,
+			&pm.IsMarkedForDeletion,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return nil, err
+		}
+	}
+	data := pm
+
+	accounting := &Accounting{
+		Product:             data.Product,
+		BusinessPartner:     data.BusinessPartner,
+		Plant:               data.Plant,
+		ValuationClass:      data.ValuationClass,
+		CostingPolicy:       data.CostingPolicy,
+		PriceUnitQty:        data.PriceUnitQty,
+		StandardPrice:       data.StandardPrice,
+		MovingAveragePrice:  data.MovingAveragePrice,
+		PriceLastChangeDate: data.PriceLastChangeDate,
+		IsMarkedForDeletion: data.IsMarkedForDeletion,
+	}
+	return accounting, nil
 }
 
 func ConvertToStorageLocation(sdc *api_input_reader.SDC, rows *sql.Rows) (*StorageLocation, error) {
@@ -333,146 +511,4 @@ func ConvertToWorkScheduling(sdc *api_input_reader.SDC, rows *sql.Rows) (*WorkSc
 		IsMarkedForDeletion:           data.IsMarkedForDeletion,
 	}
 	return workScheduling, nil
-}
-
-func ConvertToAccounting(sdc *api_input_reader.SDC, rows *sql.Rows) (*Accounting, error) {
-	pm := &requests.Accounting{}
-
-	for i := 0; true; i++ {
-		if !rows.Next() {
-			if i == 0 {
-				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
-			} else {
-				break
-			}
-		}
-		err := rows.Scan(
-			&pm.Product,
-			&pm.BusinessPartner,
-			&pm.Plant,
-			&pm.ValuationClass,
-			&pm.CostingPolicy,
-			&pm.PriceUnitQty,
-			&pm.StandardPrice,
-			&pm.MovingAveragePrice,
-			&pm.PriceLastChangeDate,
-			&pm.IsMarkedForDeletion,
-		)
-		if err != nil {
-			fmt.Printf("err = %+v \n", err)
-			return nil, err
-		}
-	}
-	data := pm
-
-	accounting := &Accounting{
-		Product:             data.Product,
-		BusinessPartner:     data.BusinessPartner,
-		Plant:               data.Plant,
-		ValuationClass:      data.ValuationClass,
-		CostingPolicy:       data.CostingPolicy,
-		PriceUnitQty:        data.PriceUnitQty,
-		StandardPrice:       data.StandardPrice,
-		MovingAveragePrice:  data.MovingAveragePrice,
-		PriceLastChangeDate: data.PriceLastChangeDate,
-		IsMarkedForDeletion: data.IsMarkedForDeletion,
-	}
-	return accounting, nil
-}
-
-func ConvertToProductDescription(sdc *api_input_reader.SDC, rows *sql.Rows) (*ProductDescription, error) {
-	pm := &requests.ProductDescription{}
-
-	for i := 0; true; i++ {
-		if !rows.Next() {
-			if i == 0 {
-				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
-			} else {
-				break
-			}
-		}
-		err := rows.Scan(
-			&pm.Product,
-			&pm.Language,
-			&pm.ProductDescription,
-		)
-		if err != nil {
-			fmt.Printf("err = %+v \n", err)
-			return nil, err
-		}
-	}
-	data := pm
-
-	productDescription := &ProductDescription{
-		Product:            data.Product,
-		Language:           data.Language,
-		ProductDescription: data.ProductDescription,
-	}
-	return productDescription, nil
-}
-
-func ConvertToProductDescriptionByBusinessPartner(sdc *api_input_reader.SDC, rows *sql.Rows) (*ProductDescByBP, error) {
-	pm := &requests.ProductDescriptionByBusinessPartner{}
-
-	for i := 0; true; i++ {
-		if !rows.Next() {
-			if i == 0 {
-				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
-			} else {
-				break
-			}
-		}
-		err := rows.Scan(
-			&pm.Product,
-			&pm.BusinessPartner,
-			&pm.Language,
-			&pm.ProductDescription,
-		)
-		if err != nil {
-			fmt.Printf("err = %+v \n", err)
-			return nil, err
-		}
-	}
-	data := pm
-
-	productDescriptionByBusinessPartner := &ProductDescByBP{
-		Product:            data.Product,
-		BusinessPartner:    data.BusinessPartner,
-		Language:           data.Language,
-		ProductDescription: data.ProductDescription,
-	}
-	return productDescriptionByBusinessPartner, nil
-}
-
-func ConvertToTax(sdc *api_input_reader.SDC, rows *sql.Rows) (*Tax, error) {
-	pm := &requests.Tax{}
-
-	for i := 0; true; i++ {
-		if !rows.Next() {
-			if i == 0 {
-				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
-			} else {
-				break
-			}
-		}
-		err := rows.Scan(
-			&pm.Product,
-			&pm.Country,
-			&pm.ProductTaxCategory,
-			&pm.ProductTaxClassification,
-		)
-		if err != nil {
-			fmt.Printf("err = %+v \n", err)
-			return nil, err
-		}
-	}
-	data := pm
-
-	tax := &Tax{
-		Product:                  data.Product,
-		Country:                  data.Country,
-		ProductTaxCategory:       data.ProductTaxCategory,
-		ProductTaxClassification: data.ProductTaxClassification,
-	}
-	return tax, nil
 }

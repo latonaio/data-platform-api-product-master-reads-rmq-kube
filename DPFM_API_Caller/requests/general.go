@@ -6,18 +6,20 @@ type General struct {
 	BaseUnit                      *string  `json:"BaseUnit"`
 	ValidityStartDate             *string  `json:"ValidityStartDate"`
 	ProductGroup                  *string  `json:"ProductGroup"`
-	Division                      *string  `json:"Division"`
 	GrossWeight                   *float32 `json:"GrossWeight"`
-	WeightUnit                    *string  `json:"WeightUnit"`
-	SizeOrDimensionText           *string  `json:"SizeOrDimensionText"`
-	IndustryStandardName          *string  `json:"IndustryStandardName"`
-	ProductStandardID             *string  `json:"ProductStandardID"`
-	CreationDate                  *string  `json:"CreationDate"`
-	LastChangeDate                *string  `json:"LastChangeDate"`
 	NetWeight                     *float32 `json:"NetWeight"`
+	WeightUnit                    *string  `json:"WeightUnit"`
+	InternalCapacityQuantity      *float32 `json:"InternalCapacityQuantity"`
+	InternalCapacityQuantityUnit  *string  `json:"InternalCapacityQuantityUnit"`
+	SizeOrDimensionText           *string  `json:"SizeOrDimensionText"`
+	ProductStandardID             *string  `json:"ProductStandardID"`
+	IndustryStandardName          *string  `json:"IndustryStandardName"`
+	ItemCategory                  *string  `json:"ItemCategory"`
+	BarcodeType                   *string  `json:"BarcodeType"`
 	CountryOfOrigin               *string  `json:"CountryOfOrigin"`
 	CountryOfOriginLanguage       *string  `json:"CountryOfOriginLanguage"`
-	ItemCategory                  *string  `json:"ItemCategory"`
 	ProductAccountAssignmentGroup *string  `json:"ProductAccountAssignmentGroup"`
+	CreationDate                  *string  `json:"CreationDate"`
+	LastChangeDate                *string  `json:"LastChangeDate"`
 	IsMarkedForDeletion           *bool    `json:"IsMarkedForDeletion"`
 }

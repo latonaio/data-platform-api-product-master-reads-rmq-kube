@@ -25,16 +25,17 @@ type SDC struct {
 }
 
 type Message struct {
-	General            *General              `json:"General"`
-	ProductDescByBP    *[]ProductDescByBP    `json:"ProductDescByBP"`
-	BusinessPartner    *[]BusinessPartner    `json:"BusinessPartner"`
-	BPPlant            *[]BPPlant            `json:"BPPlant"`
-	Tax                *[]Tax                `json:"Tax"`
-	Accounting         *[]Accounting         `json:"Accounting"`
-	MRPArea            *[]MRPArea            `json:"MRPArea"`
-	ProductDescription *[]ProductDescription `json:"ProductDescription"`
-	StorageLocation    *[]StorageLocation    `json:"StorageLocation"`
-	WorkScheduling     *[]WorkScheduling     `json:"WorkScheduling"`
+	General                             *General                             `json:"General"`
+	ProductDescriptionByBusinessPartner *ProductDescriptionByBusinessPartner `json:"ProductDescriptionByBusinessPartner"`
+	BusinessPartner                     *BusinessPartner                     `json:"BusinessPartner"`
+	BPPlant                             *BPPlant                             `json:"BPPlant"`
+	Tax                                 *Tax                                 `json:"Tax"`
+	Accounting                          *Accounting                          `json:"Accounting"`
+	MRPArea                             *MRPArea                             `json:"MRPArea"`
+	ProductDescription                  *ProductDescription                  `json:"ProductDescription"`
+	ProductDescriptions                 []*ProductDescription                `json:"ProductDescriptions"`
+	StorageLocation                     *StorageLocation                     `json:"StorageLocation"`
+	WorkScheduling                      *WorkScheduling                      `json:"WorkScheduling"`
 }
 
 type ProductMaster struct {
@@ -49,77 +50,71 @@ type ProductMaster struct {
 }
 
 type General struct {
-	Product                       string               `json:"Product"`
-	ProductType                   *string              `json:"ProductType"`
-	BaseUnit                      *string              `json:"BaseUnit"`
-	ValidityStartDate             *string              `json:"ValidityStartDate"`
-	ProductGroup                  *string              `json:"ProductGroup"`
-	Division                      *string              `json:"Division"`
-	GrossWeight                   *float32             `json:"GrossWeight"`
-	WeightUnit                    *string              `json:"WeightUnit"`
-	SizeOrDimensionText           *string              `json:"SizeOrDimensionText"`
-	IndustryStandardName          *string              `json:"IndustryStandardName"`
-	ProductStandardID             *string              `json:"ProductStandardID"`
-	CreationDate                  *string              `json:"CreationDate"`
-	LastChangeDate                *string              `json:"LastChangeDate"`
-	NetWeight                     *float32             `json:"NetWeight"`
-	CountryOfOrigin               *string              `json:"CountryOfOrigin"`
-	CountryOfOriginLanguage       *string              `json:"CountryOfOriginLanguage"`
-	ItemCategory                  *string              `json:"ItemCategory"`
-	ProductAccountAssignmentGroup *string              `json:"ProductAccountAssignmentGroup"`
-	IsMarkedForDeletion           *bool                `json:"IsMarkedForDeletion"`
-	BusinessPartner               []BusinessPartner    `json:"BusinessPartner"`
-	ProductDescription            []ProductDescription `json:"ProductDescription"`
-	Tax                           []Tax                `json:"Tax"`
+	Product                       string   `json:"Product"`
+	ProductType                   *string  `json:"ProductType"`
+	BaseUnit                      *string  `json:"BaseUnit"`
+	ValidityStartDate             *string  `json:"ValidityStartDate"`
+	ProductGroup                  *string  `json:"ProductGroup"`
+	GrossWeight                   *float32 `json:"GrossWeight"`
+	NetWeight                     *float32 `json:"NetWeight"`
+	WeightUnit                    *string  `json:"WeightUnit"`
+	InternalCapacityQuantity      *float32 `json:"InternalCapacityQuantity"`
+	InternalCapacityQuantityUnit  *string  `json:"InternalCapacityQuantityUnit"`
+	SizeOrDimensionText           *string  `json:"SizeOrDimensionText"`
+	ProductStandardID             *string  `json:"ProductStandardID"`
+	IndustryStandardName          *string  `json:"IndustryStandardName"`
+	ItemCategory                  *string  `json:"ItemCategory"`
+	BarcodeType                   *string  `json:"BarcodeType"`
+	CountryOfOrigin               *string  `json:"CountryOfOrigin"`
+	CountryOfOriginLanguage       *string  `json:"CountryOfOriginLanguage"`
+	ProductAccountAssignmentGroup *string  `json:"ProductAccountAssignmentGroup"`
+	CreationDate                  *string  `json:"CreationDate"`
+	LastChangeDate                *string  `json:"LastChangeDate"`
+	IsMarkedForDeletion           *bool    `json:"IsMarkedForDeletion"`
 }
 
 type BusinessPartner struct {
-	Product                string            `json:"Product"`
-	BusinessPartner        int               `json:"BusinessPartner"`
-	ValidityEndDate        string            `json:"ValidityEndDate"`
-	ValidityStartDate      string            `json:"ValidityStartDate"`
-	BusinessPartnerProduct *string           `json:"BusinessPartnerProduct"`
-	IsMarkedForDeletion    *bool             `json:"IsMarkedForDeletion"`
-	BPPlant                []BPPlant         `json:"BPPlant"`
-	ProductDescByBP        []ProductDescByBP `json:"ProductDescByBP"`
+	Product                string  `json:"Product"`
+	BusinessPartner        int     `json:"BusinessPartner"`
+	ValidityEndDate        *string `json:"ValidityEndDate"`
+	ValidityStartDate      *string `json:"ValidityStartDate"`
+	BusinessPartnerProduct *string `json:"BusinessPartnerProduct"`
+	IsMarkedForDeletion    *bool   `json:"IsMarkedForDeletion"`
 }
 
 type BPPlant struct {
-	Product                                   string            `json:"Product"`
-	BusinessPartner                           int               `json:"BusinessPartner"`
-	Plant                                     string            `json:"Plant"`
-	AvailabilityCheckType                     *string           `json:"AvailabilityCheckType"`
-	MRPType                                   *string           `json:"MRPType"`
-	MRPController                             *string           `json:"MRPController"`
-	ReorderThresholdQuantity                  *float32          `json:"ReorderThresholdQuantity"`
-	PlanningTimeFence                         *int              `json:"PlanningTimeFence"`
-	MRPPlanningCalender                       *string           `json:"MRPPlanningCalender"`
-	SafetyStockQuantityInBaseUnit             *float32          `json:"SafetyStockQuantityInBaseUnit"`
-	SafetyDuration                            *int              `json:"SafetyDuration"`
-	MaximumStockQuantityInBaseUnit            *float32          `json:"MaximumStockQuantityInBaseUnit"`
-	MinimumDeliveryQuantityInBaseUnit         *float32          `json:"MinimumDeliveryQuantityInBaseUnit"`
-	MinimumDeliveryLotSizeQuantityInBaseUnit  *float32          `json:"MinimumDeliveryLotSizeQuantityInBaseUnit"`
-	DeliveryLotSizeRoundingQuantityInBaseUnit *float32          `json:"DeliveryLotSizeRoundingQuantityInBaseUnit"`
-	MaximumDeliveryLotSizeQuantityInBaseUnit  *float32          `json:"MaximumDeliveryLotSizeQuantityInBaseUnit"`
-	MaximumDeliveryQuantityInBaseUnit         *float32          `json:"MaximumDeliveryQuantityInBaseUnit"`
-	DeliveryLotSizeIsFixed                    *bool             `json:"DeliveryLotSizeIsFixed"`
-	StandardDeliveryDurationInDays            *int              `json:"StandardDeliveryDurationInDays"`
-	IsBatchManagementRequired                 *bool             `json:"IsBatchManagementRequired"`
-	BatchManagementPolicy                     *string           `json:"BatchManagementPolicy"`
-	InventoryUnit                             *string           `json:"InventoryUnit"`
-	ProfitCenter                              *string           `json:"ProfitCenter"`
-	IsMarkedForDeletion                       *bool             `json:"IsMarkedForDeletion"`
-	StorageLocation                           []StorageLocation `json:"StorageLocation"`
-	MRPArea                                   []MRPArea         `json:"MRPArea"`
-	WorkScheduling                            []WorkScheduling  `json:"WorkScheduling"`
-	Accounting                                []Accounting      `json:"Accounting"`
+	Product                                   string   `json:"Product"`
+	BusinessPartner                           int      `json:"BusinessPartner"`
+	Plant                                     string   `json:"Plant"`
+	AvailabilityCheckType                     *string  `json:"AvailabilityCheckType"`
+	ProfitCenter                              *string  `json:"ProfitCenter"`
+	MRPType                                   *string  `json:"MRPType"`
+	MRPController                             *string  `json:"MRPController"`
+	ReorderThresholdQuantity                  *float32 `json:"ReorderThresholdQuantity"`
+	PlanningTimeFence                         *int     `json:"PlanningTimeFence"`
+	MRPPlanningCalendar                       *string  `json:"MRPPlanningCalendar"`
+	SafetyStockQuantityInBaseUnit             *float32 `json:"SafetyStockQuantityInBaseUnit"`
+	SafetyDuration                            *int     `json:"SafetyDuration"`
+	MaximumStockQuantityInBaseUnit            *float32 `json:"MaximumStockQuantityInBaseUnit"`
+	MinimumDeliveryQuantityInBaseUnit         *float32 `json:"MinimumDeliveryQuantityInBaseUnit"`
+	MinimumDeliveryLotSizeQuantityInBaseUnit  *float32 `json:"MinimumDeliveryLotSizeQuantityInBaseUnit"`
+	StandardDeliveryLotSizeQuantityInBaseUnit *float32 `json:"StandardDeliveryLotSizeQuantityInBaseUnit"`
+	DeliveryLotSizeRoundingQuantityInBaseUnit *float32 `json:"DeliveryLotSizeRoundingQuantityInBaseUnit"`
+	MaximumDeliveryLotSizeQuantityInBaseUnit  *float32 `json:"MaximumDeliveryLotSizeQuantityInBaseUnit"`
+	MaximumDeliveryQuantityInBaseUnit         *float32 `json:"MaximumDeliveryQuantityInBaseUnit"`
+	DeliveryLotSizeIsFixed                    *bool    `json:"DeliveryLotSizeIsFixed"`
+	StandardDeliveryDurationInDays            *int     `json:"StandardDeliveryDurationInDays"`
+	IsBatchManagementRequired                 *bool    `json:"IsBatchManagementRequired"`
+	BatchManagementPolicy                     *string  `json:"BatchManagementPolicy"`
+	InventoryUnit                             *string  `json:"InventoryUnit"`
+	IsMarkedForDeletion                       *bool    `json:"IsMarkedForDeletion"`
 }
 
 type StorageLocation struct {
 	Product              string  `json:"Product"`
 	BusinessPartner      int     `json:"BusinessPartner"`
 	Plant                string  `json:"Plant"`
-	StorageLocation      string  `json:"StorageLocation"`
+	StorageLocation      *string `json:"StorageLocation"`
 	CreationDate         *string `json:"CreationDate"`
 	InventoryBlockStatus *bool   `json:"InventoryBlockStatus"`
 	IsMarkedForDeletion  *bool   `json:"IsMarkedForDeletion"`
@@ -177,22 +172,22 @@ type Accounting struct {
 	IsMarkedForDeletion *bool    `json:"IsMarkedForDeletion"`
 }
 
+type Tax struct {
+	Product                  string  `json:"Product"`
+	Country                  *string `json:"Country"`
+	ProductTaxCategory       *string `json:"ProductTaxCategory"`
+	ProductTaxClassification *string `json:"ProductTaxClassification"`
+}
+
 type ProductDescription struct {
 	Product            string  `json:"Product"`
 	Language           string  `json:"Language"`
 	ProductDescription *string `json:"ProductDescription"`
 }
 
-type ProductDescByBP struct {
+type ProductDescriptionByBusinessPartner struct {
 	Product            string  `json:"Product"`
 	BusinessPartner    int     `json:"BusinessPartner"`
 	Language           string  `json:"Language"`
 	ProductDescription *string `json:"ProductDescription"`
-}
-
-type Tax struct {
-	Product                  string  `json:"Product"`
-	Country                  string  `json:"Country"`
-	ProductTaxCategory       string  `json:"ProductTaxCategory"`
-	ProductTaxClassification *string `json:"ProductTaxClassification"`
 }

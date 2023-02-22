@@ -15,10 +15,10 @@ type General struct {
 	ProductStandardID             *string  `json:"ProductStandardID"`
 	IndustryStandardName          *string  `json:"IndustryStandardName"`
 	ItemCategory                  *string  `json:"ItemCategory"`
-	BarcodeType                   *string  `json:"BarcodeType"`
 	CountryOfOrigin               *string  `json:"CountryOfOrigin"`
 	CountryOfOriginLanguage       *string  `json:"CountryOfOriginLanguage"`
 	ProductAccountAssignmentGroup *string  `json:"ProductAccountAssignmentGroup"`
+	BarcodeType                   *string  `json:"BarcodeType"`
 	CreationDate                  *string  `json:"CreationDate"`
 	LastChangeDate                *string  `json:"LastChangeDate"`
 	IsMarkedForDeletion           *bool    `json:"IsMarkedForDeletion"`

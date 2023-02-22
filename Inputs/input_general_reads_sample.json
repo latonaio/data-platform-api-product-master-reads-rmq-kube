@@ -20,18 +20,28 @@
 		"SizeOrDimensionText": "",
 		"IndustryStandardName": "",
 		"ProductStandardID": "",
+		"NetWeight": null,
+		"ItemCategory": "",
+		"CountryOfOrigin": "",
+		"CountryOfOriginLanguage": "",
+		"BarcodeType": "",
+		"ProductAccountAssignmentGroup": "",
 		"CreationDate": "",
 		"LastChangeDate": "",
-		"NetWeight": null,
-		"CountryOfOrigin": "",
-		"ItemCategory": "",
-		"ProductAccountAssignmentGroup": "",
 		"IsMarkedForDeletion": null,
-		"GeneralPDF": {
-			"DocType": "",
-			"DocVersionID": null,
-			"DocID": "",
-			"FileName": ""
+		"Allergen": {
+			"Allergen": "",
+			"AllergenIsContained": ""
+		},
+		"NutritionalInfo": {
+			"Nutrient": "",
+			"NutrientContent": "",
+			"NutrientContentUnit": ""
+		},
+		"Calories": {
+			"CaloryUnitQuantity": "",
+			"Calories": "",
+			"CaloryUnit": ""
 		},
 		"BusinessPartner": {
 			"BusinessPartner": null,
@@ -40,8 +50,6 @@
 			"BusinessPartnerProduct": "",
 			"IsMarkedForDeletion": null,
 			"BPPlant": {
-				"Product": "",
-				"BusinessPartner": null,
 				"Plant": "",
 				"AvailabilityCheckType": "",
 				"ProfitCenter": "",
@@ -65,28 +73,13 @@
 				"BatchManagementPolicy": "",
 				"InventoryUnit": "",
 				"IsMarkedForDeletion": null,
-				"BPPlantPDF": {
-					"DocType": "",
-					"DocVersionID": null,
-					"DocID": "",
-					"FileName": ""
-				},
 				"StorageLocation": {
 					"StorageLocation": "",
 					"CreationDate": "",
 					"InventoryBlockStatus": null,
 					"IsMarkedForDeletion": null
 				},
-				"Procurement": {
-					"Buyable": null,
-					"IsAutoPurOrdCreationAllowed": null,
-					"IsSourceListRequired": null,
-					"IsMarkedForDeletion": null
-				},
 				"MRPArea": {
-					"Product": "",
-					"BusinessPartner": null,
-					"Plant": "",
 					"MRPArea": "",
 					"StorageLocationForMRP": "",
 					"MRPType": "",
@@ -128,28 +121,24 @@
 					"IsMarkedForDeletion": null
 				}
 			},
-			"Sales": {
-				"Sellable": null,
-				"IsMarkedForDeletion": null
-			},
 			"Tax": {
 				"Country": "",
 				"TaxCategory": "",
 				"ProductTaxClassification": ""
+			},
+			"ProductDescription": {
+				"Language": "",
+				"ProductDescription": ""
+			},
+			"ProductDescriptionByBusinessPartner": {
+				"BusinessPartner": 201,
+				"Language": "JA",
+				"ProductDescription": ""
 			}
-		},
-		"ProductDescription": {
-			"Language": "",
-			"ProductDescription": ""
-		},
-		"ProductDescriptionByBusinessPartner": {
-			"BusinessPartner": 201,
-			"Language": "JA",
-			"ProductDescription": ""
 		}
 	},
 	"api_schema": "DPFMProductMasterReads",
-	"accepter": ["General", "ProductDescriptionByBusinessPartner"],
+	"accepter": ["General"],
 	"product_id": "",
 	"deleted": false
 }

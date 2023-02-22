@@ -9,7 +9,7 @@ type WorkScheduling struct {
 	ProductionSupervisor          *string `json:"ProductionSupervisor"`
 	ProductProductionQuantityUnit *string `json:"ProductProductionQuantityUnit"`
 	ProdnOrderIsBatchRequired     *bool   `json:"ProdnOrderIsBatchRequired"`
-	MatlCompIsMarkedForBackflush  *bool   `json:"MatlCompIsMarkedForBackflush"`
+	PDTCompIsMarkedForBackflush   *bool   `json:"PDTCompIsMarkedForBackflush"`
 	ProductionSchedulingProfile   *string `json:"ProductionSchedulingProfile"`
 	IsMarkedForDeletion           *bool   `json:"IsMarkedForDeletion"`
 }

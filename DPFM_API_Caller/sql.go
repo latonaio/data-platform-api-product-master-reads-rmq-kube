@@ -19,38 +19,48 @@ func (c *DPFMAPICaller) readSqlProcess(
 	errs *[]error,
 	log *logger.Logger,
 ) interface{} {
-	var general *dpfm_api_output_formatter.General
-	var productDescription *dpfm_api_output_formatter.ProductDescription
-	var productDescriptions []*dpfm_api_output_formatter.ProductDescription
-	var productDescriptionByBusinessPartner *dpfm_api_output_formatter.ProductDescriptionByBusinessPartner
-	var businessPartner *dpfm_api_output_formatter.BusinessPartner
-	var bPPlant *dpfm_api_output_formatter.BPPlant
-	var mrpArea *dpfm_api_output_formatter.MRPArea
-	var storageLocation *dpfm_api_output_formatter.StorageLocation
-	var workScheduling *dpfm_api_output_formatter.WorkScheduling
-	var tax *dpfm_api_output_formatter.Tax
-	var accounting *dpfm_api_output_formatter.Accounting
+	var general *[]dpfm_api_output_formatter.General
+	var productDescription *[]dpfm_api_output_formatter.ProductDescription
+	var productDescByBP *[]dpfm_api_output_formatter.ProductDescByBP
+	var businessPartner *[]dpfm_api_output_formatter.BusinessPartner
+	var allergen *[]dpfm_api_output_formatter.Allergen
+	var nutritionalInfo *[]dpfm_api_output_formatter.NutritionalInfo
+	var calories *[]dpfm_api_output_formatter.Calories
+	var bPPlant *[]dpfm_api_output_formatter.BPPlant
+	var mrpArea *[]dpfm_api_output_formatter.MRPArea
+	var storageLocation *[]dpfm_api_output_formatter.StorageLocation
+	var workScheduling *[]dpfm_api_output_formatter.WorkScheduling
+	var tax *[]dpfm_api_output_formatter.Tax
+	var accounting *[]dpfm_api_output_formatter.Accounting
 	for _, fn := range accepter {
 		switch fn {
 		case "General":
 			func() {
 				general = c.General(mtx, input, output, errs, log)
 			}()
-		case "ProductDescriptionByBusinessPartner":
+		case "ProductDescByBP":
 			func() {
-				productDescriptionByBusinessPartner = c.ProductDescriptionByBusinessPartner(mtx, input, output, errs, log)
+				productDescByBP = c.ProductDescByBP(mtx, input, output, errs, log)
 			}()
 		case "ProductDescription":
-			func() {
-				productDescription = c.ProductDescription(mtx, input, output, errs, log)
-			}()
-		case "ProductDescriptions":
 			func() {
 				productDescription = c.ProductDescription(mtx, input, output, errs, log)
 			}()
 		case "BusinessPartner":
 			func() {
 				businessPartner = c.BusinessPartner(mtx, input, output, errs, log)
+			}()
+		case "Allergen":
+			func() {
+				allergen = c.Allergen(mtx, input, output, errs, log)
+			}()
+		case "NutritionalInfo":
+			func() {
+				nutritionalInfo = c.NutritionalInfo(mtx, input, output, errs, log)
+			}()
+		case "Calories":
+			func() {
+				calories = c.Calories(mtx, input, output, errs, log)
 			}()
 		case "BPPlant":
 			func() {
@@ -81,17 +91,19 @@ func (c *DPFMAPICaller) readSqlProcess(
 	}
 
 	data := &dpfm_api_output_formatter.Message{
-		General:                             general,
-		ProductDescription:                  productDescription,
-		ProductDescriptions:                 productDescriptions,
-		ProductDescriptionByBusinessPartner: productDescriptionByBusinessPartner,
-		BusinessPartner:                     businessPartner,
-		BPPlant:                             bPPlant,
-		MRPArea:                             mrpArea,
-		StorageLocation:                     storageLocation,
-		WorkScheduling:                      workScheduling,
-		Tax:                                 tax,
-		Accounting:                          accounting,
+		General:            general,
+		ProductDescription: productDescription,
+		ProductDescByBP:    productDescByBP,
+		BusinessPartner:    businessPartner,
+		Allergen:           allergen,
+		NutritionalInfo:    nutritionalInfo,
+		Calories:           calories,
+		BPPlant:            bPPlant,
+		MRPArea:            mrpArea,
+		StorageLocation:    storageLocation,
+		WorkScheduling:     workScheduling,
+		Tax:                tax,
+		Accounting:         accounting,
 	}
 
 	return data
@@ -103,13 +115,11 @@ func (c *DPFMAPICaller) General(
 	output *dpfm_api_output_formatter.SDC,
 	errs *[]error,
 	log *logger.Logger,
-) *dpfm_api_output_formatter.General {
+) *[]dpfm_api_output_formatter.General {
 	product := input.General.Product
 
 	rows, err := c.db.Query(
-		`SELECT Product, ProductType, BaseUnit, ValidityStartDate, ProductGroup, GrossWeight, NetWeight, WeightUnit,
-		InternalCapacityQuantity, InternalCapacityQuantityUnit, SizeOrDimensionText, ProductStandardID, IndustryStandardName, ItemCategory, BarcodeType,
-		CountryOfOrigin, CountryOfOriginLanguage, ProductAccountAssignmentGroup, CreationDate, LastChangeDate, IsMarkedForDeletion,
+		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_general_data
 		WHERE Product = ?;`, product,
 	)
@@ -117,8 +127,9 @@ func (c *DPFMAPICaller) General(
 		*errs = append(*errs, err)
 		return nil
 	}
+	defer rows.Close()
 
-	data, err := dpfm_api_output_formatter.ConvertToGeneral(input, rows)
+	data, err := dpfm_api_output_formatter.ConvertToGeneral(rows)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
@@ -133,56 +144,30 @@ func (c *DPFMAPICaller) ProductDescription(
 	output *dpfm_api_output_formatter.SDC,
 	errs *[]error,
 	log *logger.Logger,
-) *dpfm_api_output_formatter.ProductDescription {
-	product := input.General.Product
-	language := input.General.ProductDescription.Language
-
-	rows, err := c.db.Query(
-		`SELECT Product, Language, ProductDescription
-		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_product_description_data
-		WHERE (Product, Language) = (?, ?);`, product, language,
-	)
-	if err != nil {
-		*errs = append(*errs, err)
-		return nil
-	}
-
-	data, err := dpfm_api_output_formatter.ConvertToProductDescription(input, rows)
-	if err != nil {
-		*errs = append(*errs, err)
-		return nil
-	}
-
-	return data
-}
-
-func (c *DPFMAPICaller) ProductDescriptions(
-	mtx *sync.Mutex,
-	input *dpfm_api_input_reader.SDC,
-	output *dpfm_api_output_formatter.SDC,
-	errs *[]error,
-	log *logger.Logger,
 ) *[]dpfm_api_output_formatter.ProductDescription {
 	var args []interface{}
-	products := input.General.Products
+	product := input.General.Product
+	productDescription := input.General.ProductDescription
 
 	cnt := 0
-	for _, v := range products {
-		args = append(args, v)
+	for _, v := range productDescription {
+		args = append(args, product, v.Language)
 		cnt++
 	}
-	repeat := strings.Repeat("(?),", cnt-1) + "(?)"
+
+	repeat := strings.Repeat("(?,?),", cnt-1) + "(?,?)"
 	rows, err := c.db.Query(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_product_description_data
-		WHERE Product IN ( `+repeat+` );`, args...,
+		WHERE (Product, Language) IN ( `+repeat+` );`, args...,
 	)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
 	}
+	defer rows.Close()
 
-	data, err := dpfm_api_output_formatter.ConvertToProductDescriptions(input, rows)
+	data, err := dpfm_api_output_formatter.ConvertToProductDescription(rows)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
@@ -191,28 +176,36 @@ func (c *DPFMAPICaller) ProductDescriptions(
 	return data
 }
 
-func (c *DPFMAPICaller) ProductDescriptionByBusinessPartner(
+func (c *DPFMAPICaller) ProductDescByBP(
 	mtx *sync.Mutex,
 	input *dpfm_api_input_reader.SDC,
 	output *dpfm_api_output_formatter.SDC,
 	errs *[]error,
 	log *logger.Logger,
-) *dpfm_api_output_formatter.ProductDescriptionByBusinessPartner {
+) *[]dpfm_api_output_formatter.ProductDescByBP {
+	var args []interface{}
 	product := input.General.Product
-	businessPartner := input.General.ProductDescriptionByBusinessPartner.BusinessPartner
-	language := input.General.ProductDescriptionByBusinessPartner.Language
+	productDescByBP := input.General.ProductDescByBP
 
+	cnt := 0
+	for _, v := range productDescByBP {
+		args = append(args, product, v.BusinessPartner, v.Language)
+		cnt++
+	}
+
+	repeat := strings.Repeat("(?,?,?),", cnt-1) + "(?,?,?)"
 	rows, err := c.db.Query(
-		`SELECT Product, BusinessPartner, Language, ProductDescription
+		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_product_desc_by_bp_data
-		WHERE (Product, BusinessPartner, Language) = (?, ?, ?);`, product, businessPartner, language,
+		WHERE (Product, BusinessPartner, Language) IN ( `+repeat+` );`, args...,
 	)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
 	}
+	defer rows.Close()
 
-	data, err := dpfm_api_output_formatter.ConvertToProductDescriptionByBusinessPartner(input, rows)
+	data, err := dpfm_api_output_formatter.ConvertToProductDescByBP(rows)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
@@ -227,21 +220,144 @@ func (c *DPFMAPICaller) BusinessPartner(
 	output *dpfm_api_output_formatter.SDC,
 	errs *[]error,
 	log *logger.Logger,
-) *dpfm_api_output_formatter.BusinessPartner {
+) *[]dpfm_api_output_formatter.BusinessPartner {
+	var args []interface{}
 	product := input.General.Product
-	businessPartner := input.General.BusinessPartner.BusinessPartner
+	businessPartner := input.General.BusinessPartner
 
+	cnt := 0
+	for _, v := range businessPartner {
+		args = append(args, product, v.BusinessPartner, v.ValidityEndDate, v.ValidityStartDate)
+		cnt++
+	}
+
+	repeat := strings.Repeat("(?,?,?,?),", cnt-1) + "(?,?,?,?)"
 	rows, err := c.db.Query(
-		`SELECT Product, BusinessPartner, ValidityEndDate, ValidityStartDate, BusinessPartnerProduct, IsMarkedForDeletion
+		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_business_partner_data
-		WHERE (Product, BusinessPartner) = (?, ?);`, product, businessPartner,
+		WHERE (Product, BusinessPartner, ValidityEndDate, ValidityStartDate) IN ( `+repeat+` );`, args...,
 	)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
 	}
 
-	data, err := dpfm_api_output_formatter.ConvertToBusinessPartner(input, rows)
+	data, err := dpfm_api_output_formatter.ConvertToBusinessPartner(rows)
+	if err != nil {
+		*errs = append(*errs, err)
+		return nil
+	}
+	defer rows.Close()
+
+	return data
+}
+
+func (c *DPFMAPICaller) Allergen(
+	mtx *sync.Mutex,
+	input *dpfm_api_input_reader.SDC,
+	output *dpfm_api_output_formatter.SDC,
+	errs *[]error,
+	log *logger.Logger,
+) *[]dpfm_api_output_formatter.Allergen {
+	var args []interface{}
+	product := input.General.Product
+	allergen := input.General.Allergen
+
+	cnt := 0
+	for _, v := range allergen {
+		args = append(args, product, v.BusinessPartner, v.Allergen)
+		cnt++
+	}
+
+	repeat := strings.Repeat("(?,?,?),", cnt-1) + "(?,?,?)"
+	rows, err := c.db.Query(
+		`SELECT *
+		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_allergen_data
+		WHERE (Product, BusinessPartner, Allergen) IN ( `+repeat+` );`, args...,
+	)
+	if err != nil {
+		*errs = append(*errs, err)
+		return nil
+	}
+	defer rows.Close()
+
+	data, err := dpfm_api_output_formatter.ConvertToAllergen(rows)
+	if err != nil {
+		*errs = append(*errs, err)
+		return nil
+	}
+
+	return data
+}
+
+func (c *DPFMAPICaller) NutritionalInfo(
+	mtx *sync.Mutex,
+	input *dpfm_api_input_reader.SDC,
+	output *dpfm_api_output_formatter.SDC,
+	errs *[]error,
+	log *logger.Logger,
+) *[]dpfm_api_output_formatter.NutritionalInfo {
+	var args []interface{}
+	product := input.General.Product
+	nutritionalInfo := input.General.NutritionalInfo
+
+	cnt := 0
+	for _, v := range nutritionalInfo {
+		args = append(args, product, v.BusinessPartner, v.Nutrient)
+		cnt++
+	}
+
+	repeat := strings.Repeat("(?,?,?),", cnt-1) + "(?,?,?)"
+	rows, err := c.db.Query(
+		`SELECT *
+		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_nutritional_info_data
+		WHERE (Product, BusinessPartner, Nutrient) IN ( `+repeat+` );`, args...,
+	)
+	if err != nil {
+		*errs = append(*errs, err)
+		return nil
+	}
+	defer rows.Close()
+
+	data, err := dpfm_api_output_formatter.ConvertToNutritionalInfo(rows)
+	if err != nil {
+		*errs = append(*errs, err)
+		return nil
+	}
+
+	return data
+}
+
+func (c *DPFMAPICaller) Calories(
+	mtx *sync.Mutex,
+	input *dpfm_api_input_reader.SDC,
+	output *dpfm_api_output_formatter.SDC,
+	errs *[]error,
+	log *logger.Logger,
+) *[]dpfm_api_output_formatter.Calories {
+	var args []interface{}
+	product := input.General.Product
+	calories := input.General.Calories
+
+	cnt := 0
+	for _, v := range calories {
+		args = append(args, product, v.BusinessPartner, v.Calories)
+		cnt++
+	}
+
+	repeat := strings.Repeat("(?,?,?),", cnt-1) + "(?,?,?)"
+	rows, err := c.db.Query(
+		`SELECT *
+		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_calories_data
+		WHERE (Product, BusinessPartner, Calories) IN ( `+repeat+` );`, args...,
+	)
+	if err != nil {
+		*errs = append(*errs, err)
+		return nil
+	}
+	defer rows.Close()
+
+	data, err := dpfm_api_output_formatter.ConvertToCalories(rows)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
@@ -256,26 +372,33 @@ func (c *DPFMAPICaller) BPPlant(
 	output *dpfm_api_output_formatter.SDC,
 	errs *[]error,
 	log *logger.Logger,
-) *dpfm_api_output_formatter.BPPlant {
+) *[]dpfm_api_output_formatter.BPPlant {
+	var args []interface{}
 	product := input.General.Product
-	businessPartner := input.General.BusinessPartner.BusinessPartner
+	businessPartner := input.General.BusinessPartner
 
+	cnt := 0
+	for _, v := range businessPartner {
+		bPPlant := v.BPPlant
+		for _, w := range bPPlant {
+			args = append(args, product, v.BusinessPartner, w.Plant)
+		}
+		cnt++
+	}
+
+	repeat := strings.Repeat("(?,?,?),", cnt-1) + "(?,?,?)"
 	rows, err := c.db.Query(
-		`SELECT Product, BusinessPartner, Plant, AvailabilityCheckType, ProfitCenter, MRPType, MRPController, 
-		ReorderThresholdQuantity, PlanningTimeFence, MRPPlanningCalendar, SafetyStockQuantityInBaseUnit, 
-		SafetyDuration, MaximumStockQuantityInBaseUnit, MinimumDeliveryQuantityInBaseUnit, MinimumDeliveryLotSizeQuantityInBaseUnit, 
-		StandardDeliveryLotSizeQuantityInBaseUnit, DeliveryLotSizeRoundingQuantityInBaseUnit, MaximumDeliveryLotSizeQuantityInBaseUnit, 
-		MaximumDeliveryQuantityInBaseUnit, DeliveryLotSizeIsFixed, StandardDeliveryDurationInDays, IsBatchManagementRequired, 
-		BatchManagementPolicy, InventoryUnit, IsMarkedForDeletion
+		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_bp_plant_data
-		WHERE (Product, BusinessPartner) = (?, ?);`, product, businessPartner,
+		WHERE (Product, BusinessPartner) IN ( `+repeat+` );`, args...,
 	)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
 	}
+	defer rows.Close()
 
-	data, err := dpfm_api_output_formatter.ConvertToBPPlant(input, rows)
+	data, err := dpfm_api_output_formatter.ConvertToBPPlant(rows)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
@@ -290,26 +413,36 @@ func (c *DPFMAPICaller) MRPArea(
 	output *dpfm_api_output_formatter.SDC,
 	errs *[]error,
 	log *logger.Logger,
-) *dpfm_api_output_formatter.MRPArea {
+) *[]dpfm_api_output_formatter.MRPArea {
+	var args []interface{}
 	product := input.General.Product
-	businessPartner := input.General.BusinessPartner.BusinessPartner
-	plant := input.General.BusinessPartner.BPPlant.Plant
+	businessPartner := input.General.BusinessPartner
 
+	cnt := 0
+	for _, v := range businessPartner {
+		bPPlant := v.BPPlant
+		for _, w := range bPPlant {
+			mrpArea := w.MRPArea
+			for _, x := range mrpArea {
+				args = append(args, product, v.BusinessPartner, w.Plant, x.MRPArea)
+			}
+		}
+		cnt++
+	}
+
+	repeat := strings.Repeat("(?,?,?,?),", cnt-1) + "(?,?,?,?)"
 	rows, err := c.db.Query(
-		`SELECT Product, BusinessPartner, Plant, MRPArea, StorageLocationForMRP, MRPType, MRPController, 
-		ReorderThresholdQuantity, PlanningTimeFence, MRPPlanningCalendar, SafetyStockQuantityInBaseUnit, 
-		SafetyDuration, MaximumStockQuantityInBaseUnit, MinimumDeliveryQuantityInBaseUnit, MinimumDeliveryLotSizeQuantityInBaseUnit, 
-		StandardDeliveryLotSizeQuantityInBaseUnit, DeliveryLotSizeRoundingQuantityInBaseUnit, MaximumDeliveryLotSizeQuantityInBaseUnit, 
-		MaximumDeliveryQuantityInBaseUnit, DeliveryLotSizeIsFixed, StandardDeliveryDurationInDays, IsMarkedForDeletion
+		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_mrp_area_data
-		WHERE (Product, BusinessPartner, Plant) = (?, ?, ?);`, product, businessPartner, plant,
+		WHERE (Product, BusinessPartner, Plant) IN ( `+repeat+` );`, args...,
 	)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
 	}
+	defer rows.Close()
 
-	data, err := dpfm_api_output_formatter.ConvertToMRPArea(input, rows)
+	data, err := dpfm_api_output_formatter.ConvertToMRPArea(rows)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
@@ -324,22 +457,36 @@ func (c *DPFMAPICaller) StorageLocation(
 	output *dpfm_api_output_formatter.SDC,
 	errs *[]error,
 	log *logger.Logger,
-) *dpfm_api_output_formatter.StorageLocation {
+) *[]dpfm_api_output_formatter.StorageLocation {
+	var args []interface{}
 	product := input.General.Product
-	businessPartner := input.General.BusinessPartner.BusinessPartner
-	plant := input.General.BusinessPartner.BPPlant.Plant
+	businessPartner := input.General.BusinessPartner
 
+	cnt := 0
+	for _, v := range businessPartner {
+		bPPlant := v.BPPlant
+		for _, w := range bPPlant {
+			storageLocation := w.StorageLocation
+			for _, x := range storageLocation {
+				args = append(args, product, v.BusinessPartner, w.Plant, x.StorageLocation)
+			}
+		}
+		cnt++
+	}
+
+	repeat := strings.Repeat("(?,?,?,?),", cnt-1) + "(?,?,?,?)"
 	rows, err := c.db.Query(
-		`SELECT Product, BusinessPartner, Plant, StorageLocation, CreationDate, InventoryBlockStatus, IsMarkedForDeletion
+		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_storage_location_data
-		WHERE (Product, BusinessPartner, Plant) = (?, ?, ?);`, product, businessPartner, plant,
+		WHERE (Product, BusinessPartner, Plant) IN ( `+repeat+` );`, args...,
 	)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
 	}
+	defer rows.Close()
 
-	data, err := dpfm_api_output_formatter.ConvertToStorageLocation(input, rows)
+	data, err := dpfm_api_output_formatter.ConvertToStorageLocation(rows)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
@@ -354,24 +501,33 @@ func (c *DPFMAPICaller) WorkScheduling(
 	output *dpfm_api_output_formatter.SDC,
 	errs *[]error,
 	log *logger.Logger,
-) *dpfm_api_output_formatter.WorkScheduling {
+) *[]dpfm_api_output_formatter.WorkScheduling {
+	var args []interface{}
 	product := input.General.Product
-	businessPartner := input.General.BusinessPartner.BusinessPartner
-	plant := input.General.BusinessPartner.BPPlant.Plant
+	businessPartner := input.General.BusinessPartner
 
+	cnt := 0
+	for _, v := range businessPartner {
+		bPPlant := v.BPPlant
+		for _, w := range bPPlant {
+			args = append(args, product, v.BusinessPartner, w.Plant)
+		}
+		cnt++
+	}
+
+	repeat := strings.Repeat("(?,?,?),", cnt-1) + "(?,?,?)"
 	rows, err := c.db.Query(
-		`SELECT Product, BusinessPartner, Plant, ProductionInvtryManagedLoc, ProductProcessingTime, ProductionSupervisor, 
-		ProductProductionQuantityUnit, ProdnOrderIsBatchRequired, MatlCompIsMarkedForBackflush, ProductionSchedulingProfile, 
-		IsMarkedForDeletion
+		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_work_scheduling_data
-		WHERE (Product, BusinessPartner, Plant) = (?, ?, ?);`, product, businessPartner, plant,
+		WHERE (Product, BusinessPartner, Plant) IN ( `+repeat+` );`, args...,
 	)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
 	}
+	defer rows.Close()
 
-	data, err := dpfm_api_output_formatter.ConvertToWorkScheduling(input, rows)
+	data, err := dpfm_api_output_formatter.ConvertToWorkScheduling(rows)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
@@ -386,22 +542,30 @@ func (c *DPFMAPICaller) Tax(
 	output *dpfm_api_output_formatter.SDC,
 	errs *[]error,
 	log *logger.Logger,
-) *dpfm_api_output_formatter.Tax {
+) *[]dpfm_api_output_formatter.Tax {
+	var args []interface{}
 	product := input.General.Product
-	businessPartner := input.General.BusinessPartner.BusinessPartner
-	country := input.General.BusinessPartner.Tax.Country
+	tax := input.General.Tax
 
+	cnt := 0
+	for _, v := range tax {
+		args = append(args, product, v.Country, v.ProductTaxCategory)
+		cnt++
+	}
+
+	repeat := strings.Repeat("(?,?,?),", cnt-1) + "(?,?,?)"
 	rows, err := c.db.Query(
 		`SELECT Product, BusinessPartner, Country, ProductTaxCategory, ProductTaxClassification
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_tax_data
-		WHERE (Product, BusinessPartner, Country) = (?, ?, ?);`, product, businessPartner, country,
+		WHERE (Product, BusinessPartner, Country) IN ( `+repeat+` );`, args...,
 	)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
 	}
+	defer rows.Close()
 
-	data, err := dpfm_api_output_formatter.ConvertToTax(input, rows)
+	data, err := dpfm_api_output_formatter.ConvertToTax(rows)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
@@ -416,23 +580,33 @@ func (c *DPFMAPICaller) Accounting(
 	output *dpfm_api_output_formatter.SDC,
 	errs *[]error,
 	log *logger.Logger,
-) *dpfm_api_output_formatter.Accounting {
+) *[]dpfm_api_output_formatter.Accounting {
+	var args []interface{}
 	product := input.General.Product
-	businessPartner := input.General.BusinessPartner.BusinessPartner
-	plant := input.General.BusinessPartner.BPPlant.Plant
+	businessPartner := input.General.BusinessPartner
 
+	cnt := 0
+	for _, v := range businessPartner {
+		bPPlant := v.BPPlant
+		for _, w := range bPPlant {
+			args = append(args, product, v.BusinessPartner, w.Plant)
+		}
+		cnt++
+	}
+
+	repeat := strings.Repeat("(?,?,?),", cnt-1) + "(?,?,?)"
 	rows, err := c.db.Query(
-		`SELECT Product, BusinessPartner, Plant, ValuationClass, CostingPolicy, PriceUnitQty, StandardPrice, 
-		MovingAveragePrice, PriceLastChangeDate, IsMarkedForDeletion
+		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_accounting_data
-		WHERE (Product, BusinessPartner, Plant) = (?, ?, ?);`, product, businessPartner, plant,
+		WHERE (Product, BusinessPartner, Plant) IN ( `+repeat+` );`, args...,
 	)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
 	}
+	defer rows.Close()
 
-	data, err := dpfm_api_output_formatter.ConvertToAccounting(input, rows)
+	data, err := dpfm_api_output_formatter.ConvertToAccounting(rows)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil

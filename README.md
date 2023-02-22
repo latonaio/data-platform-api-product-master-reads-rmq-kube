@@ -19,16 +19,18 @@ APIサービス URL: https://xxx.xxx.io/api/API_PRODUCT_MASTER_SRV/reads/
 data-platform-api-product-master-reads-rmq-kube には、次の API をコールするためのリソースが含まれています。  
 
 * A_General（データ連携基盤 品目マスタ - 基本データ）
-* A_BPPlant（データ連携基盤 品目マスタ - ヘッダ取引先データ）
+* A_Allergen（データ連携基盤 品目マスタ - アレルゲンデータ）
+* A_NutritionalInfo（データ連携基盤 品目マスタ - 栄養成分データ）
+* A_Calories（データ連携基盤 品目マスタ - 熱量データ）
+* A_BusinessPartner（データ連携基盤 品目マスタ - 取引先データ）
+* A_BPPlant（データ連携基盤 品目マスタ - 取引先プラントデータ）
 * A_StorageLocation（データ連携基盤 品目マスタ - 保管場所データ）
-* A_Procurement（データ連携基盤 品目マスタ - 購買データ）
 * A_MRPArea（データ連携基盤 品目マスタ - MRPエリアデータ）
 * A_WorkScheduling（データ連携基盤 品目マスタ - 作業計画データ）
 * A_Accounting（データ連携基盤 品目マスタ - 会計データ）
-* A_Sales（データ連携基盤 品目マスタ - 販売データ）
 * A_Tax（データ連携基盤 品目マスタ - 税データ）
 * A_ProductDesc（データ連携基盤 品目マスタ - 品目テキストデータ）
-* A_ProductDescriptionByBusinessPartner（データ連携基盤 品目マスタ - ビジネスパートナ品目テキストデータ）
+* A_ProductDescByBP（データ連携基盤 品目マスタ - ビジネスパートナ品目テキストデータ）
 
  
 
@@ -43,12 +45,12 @@ Latona および AION の データ連携基盤 関連リソースでは、Input
 * sample.jsonの記載例(1)  
 
 accepter において 下記の例のように、データの種別（＝APIの種別）を指定します。  
-ここでは、"Header" が指定されています。    
+ここでは、"General" が指定されています。    
   
 ```
-	"api_schema": "DPFMOrdersCreates",
+	"api_schema": "DPFMProductMasterCreates",
 	"accepter": ["General"],
-	"order_id": null,
+	"product": "",
 	"deleted": false
 ```
   
@@ -57,9 +59,9 @@ accepter において 下記の例のように、データの種別（＝APIの�
 全データを取得する場合、sample.json は以下のように記載します。  
 
 ```
-	"api_schema": "DPFMOrdersCreates",
+	"api_schema": "DPFMProductMasterCreates",
 	"accepter": ["All"],
-	"order_id": null,
+	"product": "",
 	"deleted": false
 ```
 
@@ -69,35 +71,39 @@ accepter における データ種別 の指定に基づいて DPFM_API_Caller �
 caller.go の func() 毎 の 以下の箇所が、指定された API をコールするソースコードです。  
 
 ```
-func (c *DPFMAPICaller) AsyncOrderCreates(
+func (c *DPFMAPICaller) AsyncProductMasterReads(
 	accepter []string,
 	input *dpfm_api_input_reader.SDC,
-	output *sub_func_complementer.SDC,
+	output *dpfm_api_output_formatter.SDC,
 	log *logger.Logger,
-    
-) []error {
-	wg := sync.WaitGroup{}
+) (interface{}, []error) {
 	mtx := sync.Mutex{}
 	errs := make([]error, 0, 5)
 
+	var response interface{}
+	// SQL処理
+	response = c.readSqlProcess(nil, &mtx, input, output, accepter, &errs, log)
 
+	return response, nil
+}
 
-	for _, fn := range accepter {
-		wg.Add(1)
-		switch fn {
-		case "Generai":
-			go c.headerCreate(&wg, &mtx, subFuncFin, log, &errs, input, output)
-		case "BPPlant":
-			errs = append(errs, xerrors.New("accepter BPPlant is not implement yet"))
-		default:
-			wg.Done()
-		}
+func checkResult(msg rabbitmq.RabbitmqMessage) bool {
+	data := msg.Data()
+	d, ok := data["result"]
+	if !ok {
+		return false
 	}
+	result, ok := d.(string)
+	if !ok {
+		return false
+	}
+	return result == "success"
+}
 ```
 
 ## Output  
 本マイクロサービスでは、[golang-logging-library-for-data-platform](https://github.com/latonaio/golang-logging-library-for-data-platform) により、以下のようなデータがJSON形式で出力されます。  
-以下の sample.json の例は 品目マスタ の ヘッダデータ が取得された結果の JSON の例です。  
+以下の sample.json の例は 品目マスタ の 基本データ が取得された結果の JSON の例です。  
 以下の項目のうち、"OrderID" ～ "PlusMinusFlag" は、/DPFM_API_Output_Formatter/type.go 内 の Type Header {} による出力結果です。"cursor" ～ "time"は、golang-logging-library による 定型フォーマットの出力結果です。  
 
 ```

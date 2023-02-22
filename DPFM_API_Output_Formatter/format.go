@@ -2,22 +2,19 @@ package dpfm_api_output_formatter
 
 import (
 	"data-platform-api-product-master-reads-rmq-kube/DPFM_API_Caller/requests"
-	api_input_reader "data-platform-api-product-master-reads-rmq-kube/DPFM_API_Input_Reader"
 	"database/sql"
 	"fmt"
 )
 
-func ConvertToGeneral(sdc *api_input_reader.SDC, rows *sql.Rows) (*General, error) {
-	pm := &requests.General{}
+func ConvertToGeneral(rows *sql.Rows) (*[]General, error) {
+	defer rows.Close()
+	general := make([]General, 0)
 
-	for i := 0; true; i++ {
-		if !rows.Next() {
-			if i == 0 {
-				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
-			} else {
-				break
-			}
-		}
+	i := 0
+	for rows.Next() {
+		i++
+		pm := &requests.General{}
+
 		err := rows.Scan(
 			&pm.Product,
 			&pm.ProductType,
@@ -33,9 +30,9 @@ func ConvertToGeneral(sdc *api_input_reader.SDC, rows *sql.Rows) (*General, erro
 			&pm.ProductStandardID,
 			&pm.IndustryStandardName,
 			&pm.ItemCategory,
-			&pm.BarcodeType,
 			&pm.CountryOfOrigin,
 			&pm.CountryOfOriginLanguage,
+			&pm.BarcodeType,
 			&pm.ProductAccountAssignmentGroup,
 			&pm.CreationDate,
 			&pm.LastChangeDate,
@@ -43,48 +40,52 @@ func ConvertToGeneral(sdc *api_input_reader.SDC, rows *sql.Rows) (*General, erro
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
-			return nil, err
+			return &general, err
 		}
-	}
-	data := pm
 
-	general := &General{
-		Product:                       data.Product,
-		ProductType:                   data.ProductType,
-		BaseUnit:                      data.BaseUnit,
-		ValidityStartDate:             data.ValidityStartDate,
-		ProductGroup:                  data.ProductGroup,
-		GrossWeight:                   data.GrossWeight,
-		NetWeight:                     data.NetWeight,
-		WeightUnit:                    data.WeightUnit,
-		InternalCapacityQuantity:      data.InternalCapacityQuantity,
-		InternalCapacityQuantityUnit:  data.InternalCapacityQuantityUnit,
-		SizeOrDimensionText:           data.SizeOrDimensionText,
-		ProductStandardID:             data.ProductStandardID,
-		IndustryStandardName:          data.IndustryStandardName,
-		ItemCategory:                  data.ItemCategory,
-		BarcodeType:                   data.BarcodeType,
-		CountryOfOrigin:               data.CountryOfOrigin,
-		CountryOfOriginLanguage:       data.CountryOfOriginLanguage,
-		ProductAccountAssignmentGroup: data.ProductAccountAssignmentGroup,
-		CreationDate:                  data.CreationDate,
-		LastChangeDate:                data.LastChangeDate,
-		IsMarkedForDeletion:           data.IsMarkedForDeletion,
+		data := pm
+		general = append(general, General{
+
+			Product:                       data.Product,
+			ProductType:                   data.ProductType,
+			BaseUnit:                      data.BaseUnit,
+			ValidityStartDate:             data.ValidityStartDate,
+			ProductGroup:                  data.ProductGroup,
+			GrossWeight:                   data.GrossWeight,
+			NetWeight:                     data.NetWeight,
+			WeightUnit:                    data.WeightUnit,
+			InternalCapacityQuantity:      data.InternalCapacityQuantity,
+			InternalCapacityQuantityUnit:  data.InternalCapacityQuantityUnit,
+			SizeOrDimensionText:           data.SizeOrDimensionText,
+			ProductStandardID:             data.ProductStandardID,
+			IndustryStandardName:          data.IndustryStandardName,
+			ItemCategory:                  data.ItemCategory,
+			CountryOfOrigin:               data.CountryOfOrigin,
+			CountryOfOriginLanguage:       data.CountryOfOriginLanguage,
+			BarcodeType:                   data.BarcodeType,
+			ProductAccountAssignmentGroup: data.ProductAccountAssignmentGroup,
+			CreationDate:                  data.CreationDate,
+			LastChangeDate:                data.LastChangeDate,
+			IsMarkedForDeletion:           data.IsMarkedForDeletion,
+		})
 	}
-	return general, nil
+	if i == 0 {
+		fmt.Printf("DBに対象のレコードが存在しません。")
+		return &general, nil
+	}
+
+	return &general, nil
 }
 
-func ConvertToProductDescriptionByBusinessPartner(sdc *api_input_reader.SDC, rows *sql.Rows) (*ProductDescriptionByBusinessPartner, error) {
-	pm := &requests.ProductDescriptionByBusinessPartner{}
+func ConvertToProductDescByBP(rows *sql.Rows) (*[]ProductDescByBP, error) {
+	defer rows.Close()
+	productDescByBP := make([]ProductDescByBP, 0)
 
-	for i := 0; true; i++ {
-		if !rows.Next() {
-			if i == 0 {
-				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
-			} else {
-				break
-			}
-		}
+	i := 0
+	for rows.Next() {
+		i++
+		pm := &requests.ProductDescByBP{}
+
 		err := rows.Scan(
 			&pm.Product,
 			&pm.BusinessPartner,
@@ -93,31 +94,34 @@ func ConvertToProductDescriptionByBusinessPartner(sdc *api_input_reader.SDC, row
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
-			return nil, err
+			return &productDescByBP, err
 		}
-	}
-	data := pm
 
-	productDescriptionByBusinessPartner := &ProductDescriptionByBusinessPartner{
-		Product:            data.Product,
-		BusinessPartner:    data.BusinessPartner,
-		Language:           data.Language,
-		ProductDescription: data.ProductDescription,
+		data := pm
+		productDescByBP = append(productDescByBP, ProductDescByBP{
+			Product:            data.Product,
+			BusinessPartner:    data.BusinessPartner,
+			Language:           data.Language,
+			ProductDescription: data.ProductDescription,
+		})
 	}
-	return productDescriptionByBusinessPartner, nil
+	if i == 0 {
+		fmt.Printf("DBに対象のレコードが存在しません。")
+		return &productDescByBP, nil
+	}
+
+	return &productDescByBP, nil
 }
 
-func ConvertToBusinessPartner(sdc *api_input_reader.SDC, rows *sql.Rows) (*BusinessPartner, error) {
-	pm := &requests.BusinessPartner{}
+func ConvertToBusinessPartner(rows *sql.Rows) (*[]BusinessPartner, error) {
+	defer rows.Close()
+	businessPartner := make([]BusinessPartner, 0)
 
-	for i := 0; true; i++ {
-		if !rows.Next() {
-			if i == 0 {
-				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
-			} else {
-				break
-			}
-		}
+	i := 0
+	for rows.Next() {
+		i++
+		pm := &requests.BusinessPartner{}
+
 		err := rows.Scan(
 			&pm.Product,
 			&pm.BusinessPartner,
@@ -128,33 +132,36 @@ func ConvertToBusinessPartner(sdc *api_input_reader.SDC, rows *sql.Rows) (*Busin
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
-			return nil, err
+			return &businessPartner, err
 		}
-	}
-	data := pm
 
-	businessPartner := &BusinessPartner{
-		Product:                data.Product,
-		BusinessPartner:        data.BusinessPartner,
-		ValidityEndDate:        data.ValidityEndDate,
-		ValidityStartDate:      data.ValidityStartDate,
-		BusinessPartnerProduct: data.BusinessPartnerProduct,
-		IsMarkedForDeletion:    data.IsMarkedForDeletion,
+		data := pm
+		businessPartner = append(businessPartner, BusinessPartner{
+			Product:                data.Product,
+			BusinessPartner:        data.BusinessPartner,
+			ValidityEndDate:        data.ValidityEndDate,
+			ValidityStartDate:      data.ValidityStartDate,
+			BusinessPartnerProduct: data.BusinessPartnerProduct,
+			IsMarkedForDeletion:    data.IsMarkedForDeletion,
+		})
 	}
-	return businessPartner, nil
+	if i == 0 {
+		fmt.Printf("DBに対象のレコードが存在しません。")
+		return &businessPartner, nil
+	}
+
+	return &businessPartner, nil
 }
 
-func ConvertToProductDescription(sdc *api_input_reader.SDC, rows *sql.Rows) (*ProductDescription, error) {
-	pm := &requests.ProductDescription{}
+func ConvertToProductDescription(rows *sql.Rows) (*[]ProductDescription, error) {
+	defer rows.Close()
+	productDescription := make([]ProductDescription, 0)
 
-	for i := 0; true; i++ {
-		if !rows.Next() {
-			if i == 0 {
-				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
-			} else {
-				break
-			}
-		}
+	i := 0
+	for rows.Next() {
+		i++
+		pm := &requests.ProductDescription{}
+
 		err := rows.Scan(
 			&pm.Product,
 			&pm.Language,
@@ -162,60 +169,145 @@ func ConvertToProductDescription(sdc *api_input_reader.SDC, rows *sql.Rows) (*Pr
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
-			return nil, err
+			return &productDescription, err
 		}
-	}
-	data := pm
 
-	productDescription := &ProductDescription{
-		Product:            data.Product,
-		Language:           data.Language,
-		ProductDescription: data.ProductDescription,
+		data := pm
+		productDescription = append(productDescription, ProductDescription{
+			Product:            data.Product,
+			Language:           data.Language,
+			ProductDescription: data.ProductDescription,
+		})
 	}
-	return productDescription, nil
+	if i == 0 {
+		fmt.Printf("DBに対象のレコードが存在しません。")
+		return &productDescription, nil
+	}
+
+	return &productDescription, nil
 }
 
-func ConvertToProductDescriptions(sdc *api_input_reader.SDC, rows *sql.Rows) (*[]ProductDescription, error) {
-	pds := make([]ProductDescription, 0, len(sdc.General.Products))
-	for i := 0; true; i++ {
-		if !rows.Next() {
-			if i == 0 {
-				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
-			} else {
-				break
-			}
-		}
-		pd := requests.ProductDescription{}
+func ConvertToAllergen(rows *sql.Rows) (*[]Allergen, error) {
+	defer rows.Close()
+	allergen := make([]Allergen, 0)
+
+	i := 0
+	for rows.Next() {
+		i++
+		pm := &requests.Allergen{}
+
 		err := rows.Scan(
-			&pd.Product,
-			&pd.Language,
-			&pd.ProductDescription,
+			&pm.Product,
+			&pm.BusinessPartner,
+			&pm.Allergen,
+			&pm.AllergenIsContained,
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
-			return nil, err
+			return &allergen, err
 		}
-		pds = append(pds, ProductDescription{
-			Product:            pd.Product,
-			Language:           pd.Language,
-			ProductDescription: pd.ProductDescription,
+
+		data := pm
+		allergen = append(allergen, Allergen{
+			Product:             data.Product,
+			BusinessPartner:     data.BusinessPartner,
+			Allergen:            data.Allergen,
+			AllergenIsContained: data.AllergenIsContained,
 		})
 	}
+	if i == 0 {
+		fmt.Printf("DBに対象のレコードが存在しません。")
+		return &allergen, nil
+	}
 
-	return &pds, nil
+	return &allergen, nil
 }
 
-func ConvertToBPPlant(sdc *api_input_reader.SDC, rows *sql.Rows) (*BPPlant, error) {
-	pm := &requests.BPPlant{}
+func ConvertToNutritionalInfo(rows *sql.Rows) (*[]NutritionalInfo, error) {
+	defer rows.Close()
+	nutritionalInfo := make([]NutritionalInfo, 0)
 
-	for i := 0; true; i++ {
-		if !rows.Next() {
-			if i == 0 {
-				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
-			} else {
-				break
-			}
+	i := 0
+	for rows.Next() {
+		i++
+		pm := &requests.NutritionalInfo{}
+
+		err := rows.Scan(
+			&pm.Product,
+			&pm.BusinessPartner,
+			&pm.Nutrient,
+			&pm.NutrientContent,
+			&pm.NutrientContentUnit,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return &nutritionalInfo, err
 		}
+
+		data := pm
+		nutritionalInfo = append(nutritionalInfo, NutritionalInfo{
+			Product:             data.Product,
+			BusinessPartner:     data.BusinessPartner,
+			Nutrient:            data.Nutrient,
+			NutrientContent:     data.NutrientContent,
+			NutrientContentUnit: data.NutrientContentUnit,
+		})
+	}
+	if i == 0 {
+		fmt.Printf("DBに対象のレコードが存在しません。")
+		return &nutritionalInfo, nil
+	}
+
+	return &nutritionalInfo, nil
+}
+
+func ConvertToCalories(rows *sql.Rows) (*[]Calories, error) {
+	defer rows.Close()
+	calories := make([]Calories, 0)
+
+	i := 0
+	for rows.Next() {
+		i++
+		pm := &requests.Calories{}
+
+		err := rows.Scan(
+			&pm.Product,
+			&pm.BusinessPartner,
+			&pm.CaloryUnitQuantity,
+			&pm.Calories,
+			&pm.CaloryUnit,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return &calories, err
+		}
+
+		data := pm
+		calories = append(calories, Calories{
+			Product:            data.Product,
+			BusinessPartner:    data.BusinessPartner,
+			CaloryUnitQuantity: data.CaloryUnitQuantity,
+			Calories:           data.Calories,
+			CaloryUnit:         data.CaloryUnit,
+		})
+	}
+	if i == 0 {
+		fmt.Printf("DBに対象のレコードが存在しません。")
+		return &calories, nil
+	}
+
+	return &calories, nil
+}
+
+func ConvertToBPPlant(rows *sql.Rows) (*[]BPPlant, error) {
+	defer rows.Close()
+	bPPlant := make([]BPPlant, 0)
+
+	i := 0
+	for rows.Next() {
+		i++
+		pm := &requests.BPPlant{}
+
 		err := rows.Scan(
 			&pm.Product,
 			&pm.BusinessPartner,
@@ -245,52 +337,55 @@ func ConvertToBPPlant(sdc *api_input_reader.SDC, rows *sql.Rows) (*BPPlant, erro
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
-			return nil, err
+			return &bPPlant, err
 		}
-	}
-	data := pm
 
-	bPPlant := &BPPlant{
-		Product:                                  data.Product,
-		BusinessPartner:                          data.BusinessPartner,
-		Plant:                                    data.Plant,
-		AvailabilityCheckType:                    data.AvailabilityCheckType,
-		ProfitCenter:                             data.ProfitCenter,
-		MRPType:                                  data.MRPType,
-		MRPController:                            data.MRPController,
-		ReorderThresholdQuantity:                 data.ReorderThresholdQuantity,
-		PlanningTimeFence:                        data.PlanningTimeFence,
-		MRPPlanningCalendar:                      data.MRPPlanningCalendar,
-		SafetyStockQuantityInBaseUnit:            data.SafetyStockQuantityInBaseUnit,
-		SafetyDuration:                           data.SafetyDuration,
-		MaximumStockQuantityInBaseUnit:           data.MaximumStockQuantityInBaseUnit,
-		MinimumDeliveryQuantityInBaseUnit:        data.MinimumDeliveryQuantityInBaseUnit,
-		MinimumDeliveryLotSizeQuantityInBaseUnit: data.MinimumDeliveryLotSizeQuantityInBaseUnit,
-		StandardDeliveryLotSizeQuantityInBaseUnit: data.StandardDeliveryLotSizeQuantityInBaseUnit,
-		DeliveryLotSizeRoundingQuantityInBaseUnit: data.DeliveryLotSizeRoundingQuantityInBaseUnit,
-		MaximumDeliveryLotSizeQuantityInBaseUnit:  data.MaximumDeliveryLotSizeQuantityInBaseUnit,
-		MaximumDeliveryQuantityInBaseUnit:         data.MaximumDeliveryQuantityInBaseUnit,
-		DeliveryLotSizeIsFixed:                    data.DeliveryLotSizeIsFixed,
-		StandardDeliveryDurationInDays:            data.StandardDeliveryDurationInDays,
-		IsBatchManagementRequired:                 data.IsBatchManagementRequired,
-		BatchManagementPolicy:                     data.BatchManagementPolicy,
-		InventoryUnit:                             data.InventoryUnit,
-		IsMarkedForDeletion:                       data.IsMarkedForDeletion,
+		data := pm
+		bPPlant = append(bPPlant, BPPlant{
+			Product:                                  data.Product,
+			BusinessPartner:                          data.BusinessPartner,
+			Plant:                                    data.Plant,
+			AvailabilityCheckType:                    data.AvailabilityCheckType,
+			ProfitCenter:                             data.ProfitCenter,
+			MRPType:                                  data.MRPType,
+			MRPController:                            data.MRPController,
+			ReorderThresholdQuantity:                 data.ReorderThresholdQuantity,
+			PlanningTimeFence:                        data.PlanningTimeFence,
+			MRPPlanningCalendar:                      data.MRPPlanningCalendar,
+			SafetyStockQuantityInBaseUnit:            data.SafetyStockQuantityInBaseUnit,
+			SafetyDuration:                           data.SafetyDuration,
+			MaximumStockQuantityInBaseUnit:           data.MaximumStockQuantityInBaseUnit,
+			MinimumDeliveryQuantityInBaseUnit:        data.MinimumDeliveryQuantityInBaseUnit,
+			MinimumDeliveryLotSizeQuantityInBaseUnit: data.MinimumDeliveryLotSizeQuantityInBaseUnit,
+			StandardDeliveryLotSizeQuantityInBaseUnit: data.StandardDeliveryLotSizeQuantityInBaseUnit,
+			DeliveryLotSizeRoundingQuantityInBaseUnit: data.DeliveryLotSizeRoundingQuantityInBaseUnit,
+			MaximumDeliveryLotSizeQuantityInBaseUnit:  data.MaximumDeliveryLotSizeQuantityInBaseUnit,
+			MaximumDeliveryQuantityInBaseUnit:         data.MaximumDeliveryQuantityInBaseUnit,
+			DeliveryLotSizeIsFixed:                    data.DeliveryLotSizeIsFixed,
+			StandardDeliveryDurationInDays:            data.StandardDeliveryDurationInDays,
+			IsBatchManagementRequired:                 data.IsBatchManagementRequired,
+			BatchManagementPolicy:                     data.BatchManagementPolicy,
+			InventoryUnit:                             data.InventoryUnit,
+			IsMarkedForDeletion:                       data.IsMarkedForDeletion,
+		})
 	}
-	return bPPlant, nil
+	if i == 0 {
+		fmt.Printf("DBに対象のレコードが存在しません。")
+		return &bPPlant, nil
+	}
+
+	return &bPPlant, nil
 }
 
-func ConvertToTax(sdc *api_input_reader.SDC, rows *sql.Rows) (*Tax, error) {
-	pm := &requests.Tax{}
+func ConvertToTax(rows *sql.Rows) (*[]Tax, error) {
+	defer rows.Close()
+	tax := make([]Tax, 0)
 
-	for i := 0; true; i++ {
-		if !rows.Next() {
-			if i == 0 {
-				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
-			} else {
-				break
-			}
-		}
+	i := 0
+	for rows.Next() {
+		i++
+		pm := &requests.Tax{}
+
 		err := rows.Scan(
 			&pm.Product,
 			&pm.Country,
@@ -299,31 +394,34 @@ func ConvertToTax(sdc *api_input_reader.SDC, rows *sql.Rows) (*Tax, error) {
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
-			return nil, err
+			return &tax, err
 		}
-	}
-	data := pm
 
-	tax := &Tax{
-		Product:                  data.Product,
-		Country:                  data.Country,
-		ProductTaxCategory:       data.ProductTaxCategory,
-		ProductTaxClassification: data.ProductTaxClassification,
+		data := pm
+		tax = append(tax, Tax{
+			Product:                  data.Product,
+			Country:                  data.Country,
+			ProductTaxCategory:       data.ProductTaxCategory,
+			ProductTaxClassification: data.ProductTaxClassification,
+		})
 	}
-	return tax, nil
+	if i == 0 {
+		fmt.Printf("DBに対象のレコードが存在しません。")
+		return &tax, nil
+	}
+
+	return &tax, nil
 }
 
-func ConvertToAccounting(sdc *api_input_reader.SDC, rows *sql.Rows) (*Accounting, error) {
-	pm := &requests.Accounting{}
+func ConvertToAccounting(rows *sql.Rows) (*[]Accounting, error) {
+	defer rows.Close()
+	accounting := make([]Accounting, 0)
 
-	for i := 0; true; i++ {
-		if !rows.Next() {
-			if i == 0 {
-				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
-			} else {
-				break
-			}
-		}
+	i := 0
+	for rows.Next() {
+		i++
+		pm := &requests.Accounting{}
+
 		err := rows.Scan(
 			&pm.Product,
 			&pm.BusinessPartner,
@@ -338,37 +436,40 @@ func ConvertToAccounting(sdc *api_input_reader.SDC, rows *sql.Rows) (*Accounting
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
-			return nil, err
+			return &accounting, err
 		}
-	}
-	data := pm
 
-	accounting := &Accounting{
-		Product:             data.Product,
-		BusinessPartner:     data.BusinessPartner,
-		Plant:               data.Plant,
-		ValuationClass:      data.ValuationClass,
-		CostingPolicy:       data.CostingPolicy,
-		PriceUnitQty:        data.PriceUnitQty,
-		StandardPrice:       data.StandardPrice,
-		MovingAveragePrice:  data.MovingAveragePrice,
-		PriceLastChangeDate: data.PriceLastChangeDate,
-		IsMarkedForDeletion: data.IsMarkedForDeletion,
+		data := pm
+		accounting = append(accounting, Accounting{
+			Product:             data.Product,
+			BusinessPartner:     data.BusinessPartner,
+			Plant:               data.Plant,
+			ValuationClass:      data.ValuationClass,
+			CostingPolicy:       data.CostingPolicy,
+			PriceUnitQty:        data.PriceUnitQty,
+			StandardPrice:       data.StandardPrice,
+			MovingAveragePrice:  data.MovingAveragePrice,
+			PriceLastChangeDate: data.PriceLastChangeDate,
+			IsMarkedForDeletion: data.IsMarkedForDeletion,
+		})
 	}
-	return accounting, nil
+	if i == 0 {
+		fmt.Printf("DBに対象のレコードが存在しません。")
+		return &accounting, nil
+	}
+
+	return &accounting, nil
 }
 
-func ConvertToStorageLocation(sdc *api_input_reader.SDC, rows *sql.Rows) (*StorageLocation, error) {
-	pm := &requests.StorageLocation{}
+func ConvertToStorageLocation(rows *sql.Rows) (*[]StorageLocation, error) {
+	defer rows.Close()
+	storageLocation := make([]StorageLocation, 0)
 
-	for i := 0; true; i++ {
-		if !rows.Next() {
-			if i == 0 {
-				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
-			} else {
-				break
-			}
-		}
+	i := 0
+	for rows.Next() {
+		i++
+		pm := &requests.StorageLocation{}
+
 		err := rows.Scan(
 			&pm.Product,
 			&pm.BusinessPartner,
@@ -380,34 +481,37 @@ func ConvertToStorageLocation(sdc *api_input_reader.SDC, rows *sql.Rows) (*Stora
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
-			return nil, err
+			return &storageLocation, err
 		}
-	}
-	data := pm
 
-	storageLocation := &StorageLocation{
-		Product:              data.Product,
-		BusinessPartner:      data.BusinessPartner,
-		Plant:                data.Plant,
-		StorageLocation:      data.StorageLocation,
-		CreationDate:         data.CreationDate,
-		InventoryBlockStatus: data.InventoryBlockStatus,
-		IsMarkedForDeletion:  data.IsMarkedForDeletion,
+		data := pm
+		storageLocation = append(storageLocation, StorageLocation{
+			Product:              data.Product,
+			BusinessPartner:      data.BusinessPartner,
+			Plant:                data.Plant,
+			StorageLocation:      data.StorageLocation,
+			CreationDate:         data.CreationDate,
+			InventoryBlockStatus: data.InventoryBlockStatus,
+			IsMarkedForDeletion:  data.IsMarkedForDeletion,
+		})
 	}
-	return storageLocation, nil
+	if i == 0 {
+		fmt.Printf("DBに対象のレコードが存在しません。")
+		return &storageLocation, nil
+	}
+
+	return &storageLocation, nil
 }
 
-func ConvertToMRPArea(sdc *api_input_reader.SDC, rows *sql.Rows) (*MRPArea, error) {
-	pm := &requests.MRPArea{}
+func ConvertToMRPArea(rows *sql.Rows) (*[]MRPArea, error) {
+	defer rows.Close()
+	mRPArea := make([]MRPArea, 0)
 
-	for i := 0; true; i++ {
-		if !rows.Next() {
-			if i == 0 {
-				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
-			} else {
-				break
-			}
-		}
+	i := 0
+	for rows.Next() {
+		i++
+		pm := &requests.MRPArea{}
+
 		err := rows.Scan(
 			&pm.Product,
 			&pm.BusinessPartner,
@@ -422,8 +526,8 @@ func ConvertToMRPArea(sdc *api_input_reader.SDC, rows *sql.Rows) (*MRPArea, erro
 			&pm.SafetyStockQuantityInBaseUnit,
 			&pm.SafetyDuration,
 			&pm.MaximumStockQuantityInBaseUnit,
-			&pm.MinimumDeliveryQuantityInBaseUnit,
-			&pm.MinimumDeliveryLotSizeQuantityInBaseUnit,
+			&pm.MinumumDeliveryQuantityInBaseUnit,
+			&pm.MinumumDeliveryLotSizeQuantityInBaseUnit,
 			&pm.StandardDeliveryLotSizeQuantityInBaseUnit,
 			&pm.DeliveryLotSizeRoundingQuantityInBaseUnit,
 			&pm.MaximumDeliveryLotSizeQuantityInBaseUnit,
@@ -434,49 +538,52 @@ func ConvertToMRPArea(sdc *api_input_reader.SDC, rows *sql.Rows) (*MRPArea, erro
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
-			return nil, err
+			return &mRPArea, err
 		}
-	}
-	data := pm
 
-	mRPArea := &MRPArea{
-		Product:                                  data.Product,
-		BusinessPartner:                          data.BusinessPartner,
-		Plant:                                    data.Plant,
-		MRPArea:                                  data.MRPArea,
-		StorageLocationForMRP:                    data.StorageLocationForMRP,
-		MRPType:                                  data.MRPType,
-		MRPController:                            data.MRPController,
-		ReorderThresholdQuantity:                 data.ReorderThresholdQuantity,
-		PlanningTimeFence:                        data.PlanningTimeFence,
-		MRPPlanningCalendar:                      data.MRPPlanningCalendar,
-		SafetyStockQuantityInBaseUnit:            data.SafetyStockQuantityInBaseUnit,
-		SafetyDuration:                           data.SafetyDuration,
-		MaximumStockQuantityInBaseUnit:           data.MaximumStockQuantityInBaseUnit,
-		MinimumDeliveryQuantityInBaseUnit:        data.MinimumDeliveryQuantityInBaseUnit,
-		MinimumDeliveryLotSizeQuantityInBaseUnit: data.MinimumDeliveryLotSizeQuantityInBaseUnit,
-		StandardDeliveryLotSizeQuantityInBaseUnit: data.StandardDeliveryLotSizeQuantityInBaseUnit,
-		DeliveryLotSizeRoundingQuantityInBaseUnit: data.DeliveryLotSizeRoundingQuantityInBaseUnit,
-		MaximumDeliveryLotSizeQuantityInBaseUnit:  data.MaximumDeliveryLotSizeQuantityInBaseUnit,
-		MaximumDeliveryQuantityInBaseUnit:         data.MaximumDeliveryQuantityInBaseUnit,
-		DeliveryLotSizeIsFixed:                    data.DeliveryLotSizeIsFixed,
-		StandardDeliveryDurationInDays:            data.StandardDeliveryDurationInDays,
-		IsMarkedForDeletion:                       data.IsMarkedForDeletion,
+		data := pm
+		mRPArea = append(mRPArea, MRPArea{
+			Product:                                  data.Product,
+			BusinessPartner:                          data.BusinessPartner,
+			Plant:                                    data.Plant,
+			MRPArea:                                  data.MRPArea,
+			StorageLocationForMRP:                    data.StorageLocationForMRP,
+			MRPType:                                  data.MRPType,
+			MRPController:                            data.MRPController,
+			ReorderThresholdQuantity:                 data.ReorderThresholdQuantity,
+			PlanningTimeFence:                        data.PlanningTimeFence,
+			MRPPlanningCalendar:                      data.MRPPlanningCalendar,
+			SafetyStockQuantityInBaseUnit:            data.SafetyStockQuantityInBaseUnit,
+			SafetyDuration:                           data.SafetyDuration,
+			MaximumStockQuantityInBaseUnit:           data.MaximumStockQuantityInBaseUnit,
+			MinumumDeliveryQuantityInBaseUnit:        data.MinumumDeliveryQuantityInBaseUnit,
+			MinumumDeliveryLotSizeQuantityInBaseUnit: data.MinumumDeliveryLotSizeQuantityInBaseUnit,
+			StandardDeliveryLotSizeQuantityInBaseUnit: data.StandardDeliveryLotSizeQuantityInBaseUnit,
+			DeliveryLotSizeRoundingQuantityInBaseUnit: data.DeliveryLotSizeRoundingQuantityInBaseUnit,
+			MaximumDeliveryLotSizeQuantityInBaseUnit:  data.MaximumDeliveryLotSizeQuantityInBaseUnit,
+			MaximumDeliveryQuantityInBaseUnit:         data.MaximumDeliveryQuantityInBaseUnit,
+			DeliveryLotSizeIsFixed:                    data.DeliveryLotSizeIsFixed,
+			StandardDeliveryDurationInDays:            data.StandardDeliveryDurationInDays,
+			IsMarkedForDeletion:                       data.IsMarkedForDeletion,
+		})
 	}
-	return mRPArea, nil
+	if i == 0 {
+		fmt.Printf("DBに対象のレコードが存在しません。")
+		return &mRPArea, nil
+	}
+
+	return &mRPArea, nil
 }
 
-func ConvertToWorkScheduling(sdc *api_input_reader.SDC, rows *sql.Rows) (*WorkScheduling, error) {
-	pm := &requests.WorkScheduling{}
+func ConvertToWorkScheduling(rows *sql.Rows) (*[]WorkScheduling, error) {
+	defer rows.Close()
+	workScheduling := make([]WorkScheduling, 0)
 
-	for i := 0; true; i++ {
-		if !rows.Next() {
-			if i == 0 {
-				return nil, fmt.Errorf("DBに対象のレコードが存在しません。")
-			} else {
-				break
-			}
-		}
+	i := 0
+	for rows.Next() {
+		i++
+		pm := &requests.WorkScheduling{}
+
 		err := rows.Scan(
 			&pm.Product,
 			&pm.BusinessPartner,
@@ -486,29 +593,34 @@ func ConvertToWorkScheduling(sdc *api_input_reader.SDC, rows *sql.Rows) (*WorkSc
 			&pm.ProductionSupervisor,
 			&pm.ProductProductionQuantityUnit,
 			&pm.ProdnOrderIsBatchRequired,
-			&pm.MatlCompIsMarkedForBackflush,
+			&pm.PDTCompIsMarkedForBackflush,
 			&pm.ProductionSchedulingProfile,
 			&pm.IsMarkedForDeletion,
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
-			return nil, err
+			return &workScheduling, err
 		}
-	}
-	data := pm
 
-	workScheduling := &WorkScheduling{
-		Product:                       data.Product,
-		BusinessPartner:               data.BusinessPartner,
-		Plant:                         data.Plant,
-		ProductionInvtryManagedLoc:    data.ProductionInvtryManagedLoc,
-		ProductProcessingTime:         data.ProductProcessingTime,
-		ProductionSupervisor:          data.ProductionSupervisor,
-		ProductProductionQuantityUnit: data.ProductProductionQuantityUnit,
-		ProdnOrderIsBatchRequired:     data.ProdnOrderIsBatchRequired,
-		MatlCompIsMarkedForBackflush:  data.MatlCompIsMarkedForBackflush,
-		ProductionSchedulingProfile:   data.ProductionSchedulingProfile,
-		IsMarkedForDeletion:           data.IsMarkedForDeletion,
+		data := pm
+		workScheduling = append(workScheduling, WorkScheduling{
+			Product:                       data.Product,
+			BusinessPartner:               data.BusinessPartner,
+			Plant:                         data.Plant,
+			ProductionInvtryManagedLoc:    data.ProductionInvtryManagedLoc,
+			ProductProcessingTime:         data.ProductProcessingTime,
+			ProductionSupervisor:          data.ProductionSupervisor,
+			ProductProductionQuantityUnit: data.ProductProductionQuantityUnit,
+			ProdnOrderIsBatchRequired:     data.ProdnOrderIsBatchRequired,
+			PDTCompIsMarkedForBackflush:   data.PDTCompIsMarkedForBackflush,
+			ProductionSchedulingProfile:   data.ProductionSchedulingProfile,
+			IsMarkedForDeletion:           data.IsMarkedForDeletion,
+		})
 	}
-	return workScheduling, nil
+	if i == 0 {
+		fmt.Printf("DBに対象のレコードが存在しません。")
+		return &workScheduling, nil
+	}
+
+	return &workScheduling, nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	dpfm_api_input_reader "data-platform-api-product-master-reads-rmq-kube/DPFM_API_Input_Reader"
 	dpfm_api_output_formatter "data-platform-api-product-master-reads-rmq-kube/DPFM_API_Output_Formatter"
+	"fmt"
 	"strings"
 	"sync"
 
@@ -38,13 +39,13 @@ func (c *DPFMAPICaller) readSqlProcess(
 			func() {
 				general = c.General(mtx, input, output, errs, log)
 			}()
-		case "ProductDescByBP":
-			func() {
-				productDescByBP = c.ProductDescByBP(mtx, input, output, errs, log)
-			}()
 		case "ProductDescription":
 			func() {
 				productDescription = c.ProductDescription(mtx, input, output, errs, log)
+			}()
+		case "ProductDescByBP":
+			func() {
+				productDescByBP = c.ProductDescByBusinessPartner(mtx, input, output, errs, log)
 			}()
 		case "BusinessPartner":
 			func() {
@@ -53,6 +54,10 @@ func (c *DPFMAPICaller) readSqlProcess(
 		case "Allergen":
 			func() {
 				allergen = c.Allergen(mtx, input, output, errs, log)
+			}()
+		case "Allergens":
+			func() {
+				allergen = c.Allergens(mtx, input, output, errs, log)
 			}()
 		case "NutritionalInfo":
 			func() {
@@ -176,34 +181,32 @@ func (c *DPFMAPICaller) ProductDescription(
 	return data
 }
 
-func (c *DPFMAPICaller) ProductDescByBP(
+func (c *DPFMAPICaller) ProductDescByBusinessPartner(
 	mtx *sync.Mutex,
 	input *dpfm_api_input_reader.SDC,
 	output *dpfm_api_output_formatter.SDC,
 	errs *[]error,
 	log *logger.Logger,
 ) *[]dpfm_api_output_formatter.ProductDescByBP {
-	var args []interface{}
-	product := input.General.Product
-	productDescByBP := input.General.ProductDescByBP
-
-	cnt := 0
-	for _, v := range productDescByBP {
-		args = append(args, product, v.BusinessPartner, v.Language)
-		cnt++
+	in := ""
+	for i, v := range input.General.ProductDescByBP {
+		if i == 0 {
+			in = fmt.Sprintf("( %d, '%s', '%s' )", v.BusinessPartner, v.Language, v.Product)
+			continue
+		}
+		in = fmt.Sprintf("%s ,( %d, '%s', '%s' )", in, v.BusinessPartner, v.Language, v.Product)
 	}
 
-	repeat := strings.Repeat("(?,?,?),", cnt-1) + "(?,?,?)"
+	where := fmt.Sprintf("WHERE ( BusinessPartner, Language, Product ) IN ( %s )", in)
 	rows, err := c.db.Query(
-		`SELECT *
+		`SELECT Product, BusinessPartner, Language, ProductDescription
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_product_desc_by_bp_data
-		WHERE (Product, BusinessPartner, Language) IN ( `+repeat+` );`, args...,
+		` + where + `;`,
 	)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
 	}
-	defer rows.Close()
 
 	data, err := dpfm_api_output_formatter.ConvertToProductDescByBP(rows)
 	if err != nil {
@@ -227,15 +230,15 @@ func (c *DPFMAPICaller) BusinessPartner(
 
 	cnt := 0
 	for _, v := range businessPartner {
-		args = append(args, product, v.BusinessPartner, v.ValidityEndDate, v.ValidityStartDate)
+		args = append(args, product, v.BusinessPartner)
 		cnt++
 	}
 
-	repeat := strings.Repeat("(?,?,?,?),", cnt-1) + "(?,?,?,?)"
+	repeat := strings.Repeat("(?,?),", cnt-1) + "(?,?)"
 	rows, err := c.db.Query(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_business_partner_data
-		WHERE (Product, BusinessPartner, ValidityEndDate, ValidityStartDate) IN ( `+repeat+` );`, args...,
+		WHERE (Product, BusinessPartner) IN ( `+repeat+` );`, args...,
 	)
 	if err != nil {
 		*errs = append(*errs, err)
@@ -251,6 +254,44 @@ func (c *DPFMAPICaller) BusinessPartner(
 
 	return data
 }
+
+// func (c *DPFMAPICaller) BusinessPartner(
+// 	mtx *sync.Mutex,
+// 	input *dpfm_api_input_reader.SDC,
+// 	output *dpfm_api_output_formatter.SDC,
+// 	errs *[]error,
+// 	log *logger.Logger,
+// ) *[]dpfm_api_output_formatter.BusinessPartner {
+// 	var args []interface{}
+// 	product := input.General.Product
+// 	businessPartner := input.General.BusinessPartner
+
+// 	cnt := 0
+// 	for _, v := range businessPartner {
+// 		args = append(args, product, v.BusinessPartner, v.ValidityEndDate, v.ValidityStartDate)
+// 		cnt++
+// 	}
+
+// 	repeat := strings.Repeat("(?,?,?,?),", cnt-1) + "(?,?,?,?)"
+// 	rows, err := c.db.Query(
+// 		`SELECT *
+// 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_business_partner_data
+// 		WHERE (Product, BusinessPartner, ValidityEndDate, ValidityStartDate) IN ( `+repeat+` );`, args...,
+// 	)
+// 	if err != nil {
+// 		*errs = append(*errs, err)
+// 		return nil
+// 	}
+
+// 	data, err := dpfm_api_output_formatter.ConvertToBusinessPartner(rows)
+// 	if err != nil {
+// 		*errs = append(*errs, err)
+// 		return nil
+// 	}
+// 	defer rows.Close()
+
+// 	return data
+// }
 
 func (c *DPFMAPICaller) Allergen(
 	mtx *sync.Mutex,
@@ -274,6 +315,38 @@ func (c *DPFMAPICaller) Allergen(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_allergen_data
 		WHERE (Product, BusinessPartner, Allergen) IN ( `+repeat+` );`, args...,
+	)
+	if err != nil {
+		*errs = append(*errs, err)
+		return nil
+	}
+	defer rows.Close()
+
+	data, err := dpfm_api_output_formatter.ConvertToAllergen(rows)
+	if err != nil {
+		*errs = append(*errs, err)
+		return nil
+	}
+
+	return data
+}
+
+func (c *DPFMAPICaller) Allergens(
+	mtx *sync.Mutex,
+	input *dpfm_api_input_reader.SDC,
+	output *dpfm_api_output_formatter.SDC,
+	errs *[]error,
+	log *logger.Logger,
+) *[]dpfm_api_output_formatter.Allergen {
+	allergen := input.General.Allergen[0]
+
+	where := fmt.Sprintf("WHERE pma.Product = '%s' AND pma.BusinessPartener = %d AND aa.Language = '%s'", allergen.Product, allergen.BusinessPartner, allergen.Language)
+
+	rows, err := c.db.Query(
+		`SELECT pma.Product, pma.BusinessPartener, aa.AllergenName, pma.AllergenIsContained
+		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_allergen_data pma
+		INNER JOIN data_platform_allergen_allergen_text_data as aa ON pma.Allergen = aa.Allergen
+		` + where + `;`,
 	)
 	if err != nil {
 		*errs = append(*errs, err)
@@ -390,7 +463,7 @@ func (c *DPFMAPICaller) BPPlant(
 	rows, err := c.db.Query(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_bp_plant_data
-		WHERE (Product, BusinessPartner) IN ( `+repeat+` );`, args...,
+		WHERE (Product, BusinessPartner, Plant) IN ( `+repeat+` );`, args...,
 	)
 	if err != nil {
 		*errs = append(*errs, err)

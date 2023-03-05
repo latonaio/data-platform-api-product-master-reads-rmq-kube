@@ -116,6 +116,7 @@ type Allergen struct {
 	BusinessPartner     int    `json:"BusinessPartner"`
 	Allergen            string `json:"Allergen"`
 	AllergenIsContained *bool  `json:"AllergenIsContained"`
+	Language            string `json:"Language"`
 }
 
 type NutritionalInfo struct {

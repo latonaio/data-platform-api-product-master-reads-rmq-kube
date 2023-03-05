@@ -30,9 +30,9 @@ func ConvertToGeneral(rows *sql.Rows) (*[]General, error) {
 			&pm.ProductStandardID,
 			&pm.IndustryStandardName,
 			&pm.ItemCategory,
+			&pm.BarcodeType,
 			&pm.CountryOfOrigin,
 			&pm.CountryOfOriginLanguage,
-			&pm.BarcodeType,
 			&pm.ProductAccountAssignmentGroup,
 			&pm.CreationDate,
 			&pm.LastChangeDate,
@@ -313,7 +313,6 @@ func ConvertToBPPlant(rows *sql.Rows) (*[]BPPlant, error) {
 			&pm.BusinessPartner,
 			&pm.Plant,
 			&pm.AvailabilityCheckType,
-			&pm.ProfitCenter,
 			&pm.MRPType,
 			&pm.MRPController,
 			&pm.ReorderThresholdQuantity,
@@ -333,6 +332,7 @@ func ConvertToBPPlant(rows *sql.Rows) (*[]BPPlant, error) {
 			&pm.IsBatchManagementRequired,
 			&pm.BatchManagementPolicy,
 			&pm.InventoryUnit,
+			&pm.ProfitCenter,
 			&pm.IsMarkedForDeletion,
 		)
 		if err != nil {

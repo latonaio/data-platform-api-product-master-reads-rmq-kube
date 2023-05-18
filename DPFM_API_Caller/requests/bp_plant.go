@@ -9,7 +9,7 @@ type BPPlant struct {
 	MRPController                             *string  `json:"MRPController"`
 	ReorderThresholdQuantity                  *float32 `json:"ReorderThresholdQuantity"`
 	PlanningTimeFence                         *int     `json:"PlanningTimeFence"`
-	MRPPlanningCalendar                       *string  `json:"MRPPlanningCalender"`
+	MRPPlanningCalendar                       *string  `json:"MRPPlanningCalendar"`
 	SafetyStockQuantityInBaseUnit             *float32 `json:"SafetyStockQuantityInBaseUnit"`
 	SafetyDuration                            *int     `json:"SafetyDuration"`
 	MaximumStockQuantityInBaseUnit            *float32 `json:"MaximumStockQuantityInBaseUnit"`

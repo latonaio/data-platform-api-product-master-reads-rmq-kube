@@ -17,8 +17,8 @@ type General struct {
 	ItemCategory                  *string  `json:"ItemCategory"`
 	CountryOfOrigin               *string  `json:"CountryOfOrigin"`
 	CountryOfOriginLanguage       *string  `json:"CountryOfOriginLanguage"`
-	ProductAccountAssignmentGroup *string  `json:"ProductAccountAssignmentGroup"`
 	BarcodeType                   *string  `json:"BarcodeType"`
+	ProductAccountAssignmentGroup *string  `json:"ProductAccountAssignmentGroup"`
 	CreationDate                  *string  `json:"CreationDate"`
 	LastChangeDate                *string  `json:"LastChangeDate"`
 	IsMarkedForDeletion           *bool    `json:"IsMarkedForDeletion"`

@@ -30,9 +30,9 @@ func ConvertToGeneral(rows *sql.Rows) (*[]General, error) {
 			&pm.ProductStandardID,
 			&pm.IndustryStandardName,
 			&pm.ItemCategory,
-			&pm.BarcodeType,
 			&pm.CountryOfOrigin,
 			&pm.CountryOfOriginLanguage,
+			&pm.BarcodeType,
 			&pm.ProductAccountAssignmentGroup,
 			&pm.CreationDate,
 			&pm.LastChangeDate,
@@ -201,6 +201,7 @@ func ConvertToAllergen(rows *sql.Rows) (*[]Allergen, error) {
 			&pm.BusinessPartner,
 			&pm.Allergen,
 			&pm.AllergenIsContained,
+			&pm.IsMarkedForDeletion,
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
@@ -213,6 +214,7 @@ func ConvertToAllergen(rows *sql.Rows) (*[]Allergen, error) {
 			BusinessPartner:     data.BusinessPartner,
 			Allergen:            data.Allergen,
 			AllergenIsContained: data.AllergenIsContained,
+			IsMarkedForDeletion: data.IsMarkedForDeletion,
 		})
 	}
 	if i == 0 {
@@ -503,6 +505,50 @@ func ConvertToStorageLocation(rows *sql.Rows) (*[]StorageLocation, error) {
 	return &storageLocation, nil
 }
 
+func ConvertToStorageBin(rows *sql.Rows) (*[]StorageBin, error) {
+	defer rows.Close()
+	storageBin := make([]StorageBin, 0)
+
+	i := 0
+	for rows.Next() {
+		i++
+		pm := &requests.StorageBin{}
+
+		err := rows.Scan(
+			&pm.Product,
+			&pm.BusinessPartner,
+			&pm.Plant,
+			&pm.StorageLocation,
+			&pm.StorageBin,
+			&pm.CreationDate,
+			&pm.BlockStatus,
+			&pm.IsMarkedForDeletion,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return &storageBin, err
+		}
+
+		data := pm
+		storageBin = append(storageBin, StorageBin{
+			Product:             data.Product,
+			BusinessPartner:     data.BusinessPartner,
+			Plant:               data.Plant,
+			StorageLocation:     data.StorageLocation,
+			StorageBin:          data.StorageBin,
+			CreationDate:        data.CreationDate,
+			BlockStatus:         data.BlockStatus,
+			IsMarkedForDeletion: data.IsMarkedForDeletion,
+		})
+	}
+	if i == 0 {
+		fmt.Printf("DBに対象のレコードが存在しません。")
+		return &storageBin, nil
+	}
+
+	return &storageBin, nil
+}
+
 func ConvertToMRPArea(rows *sql.Rows) (*[]MRPArea, error) {
 	defer rows.Close()
 	mRPArea := make([]MRPArea, 0)
@@ -575,6 +621,58 @@ func ConvertToMRPArea(rows *sql.Rows) (*[]MRPArea, error) {
 	return &mRPArea, nil
 }
 
+func ConvertToQuality(rows *sql.Rows) (*[]Quality, error) {
+	defer rows.Close()
+	quality := make([]Quality, 0)
+
+	i := 0
+	for rows.Next() {
+		i++
+		pm := &requests.Quality{}
+
+		err := rows.Scan(
+			&pm.Product,
+			&pm.BusinessPartner,
+			&pm.Plant,
+			&pm.MaximumStoragePeriod,
+			&pm.QualityMgmtCtrlKey,
+			&pm.MatlQualityAuthorizationGroup,
+			&pm.HasPostToInspectionStock,
+			&pm.InspLotDocumentationIsRequired,
+			&pm.SuplrQualityManagementSystem,
+			&pm.RecrrgInspIntervalTimeInDays,
+			&pm.ProductQualityCertificateType,
+			&pm.IsMarkedForDeletion,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return &quality, err
+		}
+
+		data := pm
+		quality = append(quality, Quality{
+			Product:                        data.Product,
+			BusinessPartner:                data.BusinessPartner,
+			Plant:                          data.Plant,
+			MaximumStoragePeriod:           data.MaximumStoragePeriod,
+			QualityMgmtCtrlKey:             data.QualityMgmtCtrlKey,
+			MatlQualityAuthorizationGroup:  data.MatlQualityAuthorizationGroup,
+			HasPostToInspectionStock:       data.HasPostToInspectionStock,
+			InspLotDocumentationIsRequired: data.InspLotDocumentationIsRequired,
+			SuplrQualityManagementSystem:   data.SuplrQualityManagementSystem,
+			RecrrgInspIntervalTimeInDays:   data.RecrrgInspIntervalTimeInDays,
+			ProductQualityCertificateType:  data.ProductQualityCertificateType,
+			IsMarkedForDeletion:            data.IsMarkedForDeletion,
+		})
+	}
+	if i == 0 {
+		fmt.Printf("DBに対象のレコードが存在しません。")
+		return &quality, nil
+	}
+
+	return &quality, nil
+}
+
 func ConvertToWorkScheduling(rows *sql.Rows) (*[]WorkScheduling, error) {
 	defer rows.Close()
 	workScheduling := make([]WorkScheduling, 0)
@@ -595,6 +693,11 @@ func ConvertToWorkScheduling(rows *sql.Rows) (*[]WorkScheduling, error) {
 			&pm.ProdnOrderIsBatchRequired,
 			&pm.PDTCompIsMarkedForBackflush,
 			&pm.ProductionSchedulingProfile,
+			&pm.MinimumLotSizeQuantity,
+			&pm.StandardLotSizeQuantity,
+			&pm.LotSizeRoundingQuantity,
+			&pm.MaximumLotSizeQuantity,
+			&pm.LotSizeIsFixed,
 			&pm.IsMarkedForDeletion,
 		)
 		if err != nil {
@@ -614,6 +717,11 @@ func ConvertToWorkScheduling(rows *sql.Rows) (*[]WorkScheduling, error) {
 			ProdnOrderIsBatchRequired:     data.ProdnOrderIsBatchRequired,
 			PDTCompIsMarkedForBackflush:   data.PDTCompIsMarkedForBackflush,
 			ProductionSchedulingProfile:   data.ProductionSchedulingProfile,
+			MinimumLotSizeQuantity:        data.MinimumLotSizeQuantity,
+			StandardLotSizeQuantity:       data.StandardLotSizeQuantity,
+			LotSizeRoundingQuantity:       data.LotSizeRoundingQuantity,
+			MaximumLotSizeQuantity:        data.MaximumLotSizeQuantity,
+			LotSizeIsFixed:                data.LotSizeIsFixed,
 			IsMarkedForDeletion:           data.IsMarkedForDeletion,
 		})
 	}
@@ -623,4 +731,59 @@ func ConvertToWorkScheduling(rows *sql.Rows) (*[]WorkScheduling, error) {
 	}
 
 	return &workScheduling, nil
+}
+
+func ConvertToGeneralsByBP(rows *sql.Rows) (*[]General, error) {
+	defer rows.Close()
+	generalsByBP := make([]General, 0)
+	i := 0
+	for rows.Next() {
+		i++
+		pm := General{}
+		err := rows.Scan(
+			&pm.Product,
+			&pm.ProductGroup,
+			&pm.BaseUnit,
+			&pm.ValidityStartDate,
+			&pm.IsMarkedForDeletion,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return &generalsByBP, err
+		}
+		generalsByBP = append(generalsByBP, pm)
+	}
+	if i == 0 {
+		fmt.Printf("DBに対象のレコードが存在しません。")
+		return &generalsByBP, nil
+	}
+
+	return &generalsByBP, nil
+}
+
+func ConvertToProductDescsByBP(rows *sql.Rows) (*[]ProductDescByBP, error) {
+	defer rows.Close()
+	productDescsByBP := make([]ProductDescByBP, 0)
+	i := 0
+	for rows.Next() {
+		i++
+		pm := ProductDescByBP{}
+		err := rows.Scan(
+			&pm.Product,
+			&pm.BusinessPartner,
+			&pm.Language,
+			&pm.ProductDescription,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return &productDescsByBP, err
+		}
+		productDescsByBP = append(productDescsByBP, pm)
+	}
+	if i == 0 {
+		fmt.Printf("DBに対象のレコードが存在しません。")
+		return &productDescsByBP, nil
+	}
+
+	return &productDescsByBP, nil
 }

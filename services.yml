@@ -36,6 +36,8 @@ spec:
               value: "data-platform-api-product-master-reads-session-control-queue"
             - name: "DB_NAME"
               value: "DataPlatformMastersAndTransactionsMysqlKube"
+            - name: "NESTJS_DATA_CONNECTION_REQUEST_CONTROL_MANAGER_CONSUME"
+              value: "data-platform-api-request-reads-cache-manager-receive-queue"
           envFrom:
             - configMapRef:
                 name: env-config

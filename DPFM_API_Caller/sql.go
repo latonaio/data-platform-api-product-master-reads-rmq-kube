@@ -32,7 +32,7 @@ func (c *DPFMAPICaller) readSqlProcess(
 	var quality *[]dpfm_api_output_formatter.Quality
 	var storageLocation *[]dpfm_api_output_formatter.StorageLocation
 	var storageBin *[]dpfm_api_output_formatter.StorageBin
-	var workScheduling *[]dpfm_api_output_formatter.WorkScheduling
+	var production *[]dpfm_api_output_formatter.Production
 	var tax *[]dpfm_api_output_formatter.Tax
 	var accounting *[]dpfm_api_output_formatter.Accounting
 	for _, fn := range accepter {
@@ -41,13 +41,17 @@ func (c *DPFMAPICaller) readSqlProcess(
 			func() {
 				general = c.General(mtx, input, output, errs, log)
 			}()
-		case "ProductDescription":
+		case "Generals":
 			func() {
-				productDescription = c.ProductDescription(mtx, input, output, errs, log)
+				general = c.Generals(mtx, input, output, errs, log)
 			}()
-		case "ProductDescByBP":
+		case "ProductDescriptions":
 			func() {
-				productDescByBP = c.ProductDescByBP(mtx, input, output, errs, log)
+				productDescription = c.ProductDescriptions(mtx, input, output, errs, log)
+			}()
+		case "ProductDescsByBP":
+			func() {
+				productDescByBP = c.ProductDescsByBP(mtx, input, output, errs, log)
 			}()
 		case "BusinessPartner":
 			func() {
@@ -109,13 +113,13 @@ func (c *DPFMAPICaller) readSqlProcess(
 			func() {
 				storageBin = c.StorageBins(mtx, input, output, errs, log)
 			}()
-		case "WorkScheduling":
+		case "Production":
 			func() {
-				workScheduling = c.WorkScheduling(mtx, input, output, errs, log)
+				production = c.Production(mtx, input, output, errs, log)
 			}()
-		case "WorkSchedulings":
+		case "Productions":
 			func() {
-				workScheduling = c.WorkSchedulings(mtx, input, output, errs, log)
+				production = c.Productions(mtx, input, output, errs, log)
 			}()
 		case "Tax":
 			func() {
@@ -132,14 +136,6 @@ func (c *DPFMAPICaller) readSqlProcess(
 		case "Accountings":
 			func() {
 				accounting = c.Accountings(mtx, input, output, errs, log)
-			}()
-		case "GeneralsByBP":
-			func() {
-				general = c.GeneralsByBP(mtx, input, output, errs, log)
-			}()
-		case "ProductDescsByBP":
-			func() {
-				productDescByBP = c.ProductDescsByBP(mtx, input, output, errs, log)
 			}()
 		default:
 		}
@@ -158,7 +154,7 @@ func (c *DPFMAPICaller) readSqlProcess(
 		Quality:            quality,
 		StorageLocation:    storageLocation,
 		StorageBin:         storageBin,
-		WorkScheduling:     workScheduling,
+		Production:         production,
 		Tax:                tax,
 		Accounting:         accounting,
 	}
@@ -195,35 +191,80 @@ func (c *DPFMAPICaller) General(
 	return data
 }
 
-func (c *DPFMAPICaller) ProductDescription(
+func (c *DPFMAPICaller) Generals(
 	mtx *sync.Mutex,
 	input *dpfm_api_input_reader.SDC,
 	output *dpfm_api_output_formatter.SDC,
 	errs *[]error,
 	log *logger.Logger,
-) *[]dpfm_api_output_formatter.ProductDescription {
-	var args []interface{}
-	product := input.General.Product
-	productDescription := input.General.BusinessPartner[0].ProductDescription
+) *[]dpfm_api_output_formatter.General {
+	isMarkedForDeletion := input.General.IsMarkedForDeletion
 
-	cnt := 0
-	for _, v := range productDescription {
-		args = append(args, product, v.Language)
-		cnt++
-	}
-
-	repeat := strings.Repeat("(?,?),", cnt-1) + "(?,?)"
 	rows, err := c.db.Query(
 		`SELECT *
-		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_product_description_data
-		WHERE (Product, Language) IN ( `+repeat+` ) 
-		ORDER BY Product DESC;`, args...,
+		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_general_data
+		WHERE IsMarkedForDeletion = ?;`, isMarkedForDeletion,
 	)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
 	}
 	defer rows.Close()
+
+	data, err := dpfm_api_output_formatter.ConvertToGeneral(rows)
+	if err != nil {
+		*errs = append(*errs, err)
+		return nil
+	}
+
+	return data
+}
+
+func (c *DPFMAPICaller) ProductDescriptions(
+	mtx *sync.Mutex,
+	input *dpfm_api_input_reader.SDC,
+	output *dpfm_api_output_formatter.SDC,
+	errs *[]error,
+	log *logger.Logger,
+) *[]dpfm_api_output_formatter.ProductDescription {
+	in := ""
+
+	for iGeneral, vGeneral := range input.Generals {
+		product := vGeneral.Product
+
+		for _, vProductDescription := range vGeneral.ProductDescription { // iProductDescription は省略
+			language := vProductDescription.Language
+			pDIsMarkedForDeletion := vProductDescription.IsMarkedForDeletion
+
+			if iGeneral == 0 {
+				in = fmt.Sprintf(
+					"( '%s', '%s', '%t' )",
+					product,
+					language,
+					*pDIsMarkedForDeletion,
+				)
+				continue
+			}
+			in = fmt.Sprintf(
+				"%s ,( '%s', '%s', '%t' )",
+				in,
+				product,
+				language,
+				*pDIsMarkedForDeletion,
+			)
+		}
+	}
+
+	where := fmt.Sprintf(" WHERE ( Product, Language, IsMarkedForDeletion ) IN ( %s ) ", in)
+	rows, err := c.db.Query(
+		`SELECT *
+		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_product_description_data
+		` + where + ` ORDER BY Product DESC;`,
+	)
+	if err != nil {
+		*errs = append(*errs, err)
+		return nil
+	}
 
 	data, err := dpfm_api_output_formatter.ConvertToProductDescription(rows)
 	if err != nil {
@@ -234,7 +275,7 @@ func (c *DPFMAPICaller) ProductDescription(
 	return data
 }
 
-func (c *DPFMAPICaller) ProductDescByBP(
+func (c *DPFMAPICaller) ProductDescsByBP(
 	mtx *sync.Mutex,
 	input *dpfm_api_input_reader.SDC,
 	output *dpfm_api_output_formatter.SDC,
@@ -242,17 +283,42 @@ func (c *DPFMAPICaller) ProductDescByBP(
 	log *logger.Logger,
 ) *[]dpfm_api_output_formatter.ProductDescByBP {
 	in := ""
-	for i, v := range input.General.BusinessPartner[0].ProductDescription[0].ProductDescByBP {
-		if i == 0 {
-			in = fmt.Sprintf("( %d, '%s', '%s' )", v.BusinessPartner, v.Language, v.Product)
-			continue
+
+	for iGeneral, vGeneral := range input.Generals {
+		product := vGeneral.Product
+
+		for _, vBusinessPartner := range vGeneral.BusinessPartner { // iBusinessPartner は省略
+			businessPartner := vBusinessPartner.BusinessPartner
+
+			for _, vProductDescByBP := range vBusinessPartner.ProductDescByBP { // iProductDescByBP は省略
+				language := vProductDescByBP.Language
+				pDBPIsMarkedForDeletion := vProductDescByBP.IsMarkedForDeletion
+
+				if iGeneral == 0 {
+					in = fmt.Sprintf(
+						"( '%s', '%d', '%s', '%t' )",
+						product,
+						businessPartner,
+						language,
+						*pDBPIsMarkedForDeletion,
+					)
+					continue
+				}
+				in = fmt.Sprintf(
+					"%s ,( '%s', '%d', '%s', '%t' )",
+					in,
+					product,
+					businessPartner,
+					language,
+					*pDBPIsMarkedForDeletion,
+				)
+			}
 		}
-		in = fmt.Sprintf("%s ,( %d, '%s', '%s' )", in, v.BusinessPartner, v.Language, v.Product)
 	}
 
-	where := fmt.Sprintf(" WHERE ( BusinessPartner, Language, Product ) IN ( %s ) ", in)
+	where := fmt.Sprintf(" WHERE ( Product, BusinessPartner, Language, IsMarkedForDeletion ) IN ( %s ) ", in)
 	rows, err := c.db.Query(
-		`SELECT Product, BusinessPartner, Language, ProductDescription
+		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_product_desc_by_bp_data
 		` + where + ` ORDER BY Product DESC, BusinessPartner DESC;`,
 	)
@@ -291,7 +357,7 @@ func (c *DPFMAPICaller) BusinessPartner(
 	rows, err := c.db.Query(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_business_partner_data
-		WHERE (Product, BusinessPartner) IN ( `+repeat+` ) 
+		WHERE (Product, BusinessPartner) IN ( `+repeat+` )
 		ORDER BY IsMarkedForDeletion DESC, Product DESC, BusinessPartner DESC;`, args...,
 	)
 	if err != nil {
@@ -368,7 +434,7 @@ func (c *DPFMAPICaller) Allergen(
 	rows, err := c.db.Query(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_allergen_data
-		WHERE (Product, BusinessPartner, Allergen) IN ( `+repeat+` ) 
+		WHERE (Product, BusinessPartner, Allergen) IN ( `+repeat+` )
 		ORDER BY IsMarkedForDeletion DESC, Product DESC, BusinessPartner DESC;`, args...,
 	)
 	if err != nil {
@@ -429,7 +495,7 @@ func (c *DPFMAPICaller) NutritionalInfo(
 	rows, err := c.db.Query(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_nutritional_info_data
-		WHERE Product = ? 
+		WHERE Product = ?
 		ORDER BY Product DESC, BusinessPartner DESC;`, product,
 	)
 	if err != nil {
@@ -460,7 +526,7 @@ func (c *DPFMAPICaller) Calories(
 	rows, err := c.db.Query(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_calories_data
-		WHERE Product = ? AND BusinessPartner = ? 
+		WHERE Product = ? AND BusinessPartner = ?
 		ORDER BY Product DESC, BusinessPartner DESC;`, product, *bp,
 	)
 	if err != nil {
@@ -487,7 +553,7 @@ func (c *DPFMAPICaller) BPPlant(
 ) *[]dpfm_api_output_formatter.BPPlant {
 	var args []interface{}
 	product := input.General.Product
-	bPPlant := input.General.BPPlant
+	bPPlant := input.General.BusinessPartner[0].BPPlant
 
 	cnt := 0
 	for _, v := range bPPlant {
@@ -499,7 +565,7 @@ func (c *DPFMAPICaller) BPPlant(
 	rows, err := c.db.Query(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_bp_plant_data
-		WHERE (Product, BusinessPartner, Plant) IN ( `+repeat+` ) 
+		WHERE (Product, BusinessPartner, Plant) IN ( `+repeat+` )
 		ORDER BY IsMarkedForDeletion DESC, Product DESC, BusinessPartner DESC;`, args...,
 	)
 	if err != nil {
@@ -530,7 +596,7 @@ func (c *DPFMAPICaller) BPPlants(
 	rows, err := c.db.Query(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_bp_plant_data
-		WHERE Product = ? AND BusinessPartner = ? 
+		WHERE Product = ? AND BusinessPartner = ?
 		ORDER BY IsMarkedForDeletion DESC, Product DESC, BusinessPartner DESC;`, product, *businessPartner,
 	)
 	if err != nil {
@@ -557,7 +623,7 @@ func (c *DPFMAPICaller) MRPArea(
 ) *[]dpfm_api_output_formatter.MRPArea {
 	var args []interface{}
 	product := input.General.Product
-	bPPlant := input.General.BPPlant
+	bPPlant := input.General.BusinessPartner[0].BPPlant
 
 	cnt := 0
 	for _, v := range bPPlant {
@@ -572,7 +638,7 @@ func (c *DPFMAPICaller) MRPArea(
 	rows, err := c.db.Query(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_mrp_area_data
-		WHERE (Product, BusinessPartner, Plant) IN ( `+repeat+` ) 
+		WHERE (Product, BusinessPartner, Plant) IN ( `+repeat+` )
 		ORDER BY IsMarkedForDeletion DESC, Product DESC, BusinessPartner DESC;`, args...,
 	)
 	if err != nil {
@@ -603,7 +669,7 @@ func (c *DPFMAPICaller) MRPAreas(
 	rows, err := c.db.Query(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_mrp_area_data
-		WHERE Product = ? AND BusinessPartner = ? 
+		WHERE Product = ? AND BusinessPartner = ?
 		ORDER BY IsMarkedForDeletion DESC, Product DESC, BusinessPartner DESC;`, product, businessPartner,
 	)
 	if err != nil {
@@ -630,7 +696,7 @@ func (c *DPFMAPICaller) Quality(
 ) *[]dpfm_api_output_formatter.Quality {
 	var args []interface{}
 	product := input.General.Product
-	bPPlant := input.General.BPPlant
+	bPPlant := input.General.BusinessPartner[0].BPPlant
 
 	cnt := 0
 	for _, v := range bPPlant {
@@ -642,7 +708,7 @@ func (c *DPFMAPICaller) Quality(
 	rows, err := c.db.Query(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_quality_data
-		WHERE (Product, BusinessPartner, Plant) IN ( `+repeat+` ) 
+		WHERE (Product, BusinessPartner, Plant) IN ( `+repeat+` )
 		ORDER BY IsMarkedForDeletion DESC, Product DESC, BusinessPartner DESC;`, args...,
 	)
 	if err != nil {
@@ -673,7 +739,7 @@ func (c *DPFMAPICaller) Qualities(
 	rows, err := c.db.Query(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_quality_data
-		WHERE Product = ? AND BusinessPartner = ? 
+		WHERE Product = ? AND BusinessPartner = ?
 		ORDER BY IsMarkedForDeletion DESC, Product DESC, BusinessPartner DESC;`, product, businessPartner,
 	)
 	if err != nil {
@@ -700,7 +766,7 @@ func (c *DPFMAPICaller) StorageLocation(
 ) *[]dpfm_api_output_formatter.StorageLocation {
 	var args []interface{}
 	product := input.General.Product
-	bPPlant := input.General.BPPlant
+	bPPlant := input.General.BusinessPartner[0].BPPlant
 
 	cnt := 0
 	for _, v := range bPPlant {
@@ -745,7 +811,7 @@ func (c *DPFMAPICaller) StorageLocations(
 	rows, err := c.db.Query(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_storage_location_data
-		WHERE Product = ? AND BusinessPartner = ? 
+		WHERE Product = ? AND BusinessPartner = ?
 		ORDER BY IsMarkedForDeletion DESC, Product DESC, InventoryBlockStatus DESC, BusinessPartner DESC;`, product, *businessPartner,
 	)
 	if err != nil {
@@ -772,7 +838,7 @@ func (c *DPFMAPICaller) StorageBin(
 ) *[]dpfm_api_output_formatter.StorageBin {
 	var args []interface{}
 	product := input.General.Product
-	bPPlant := input.General.BPPlant
+	bPPlant := input.General.BusinessPartner[0].BPPlant
 
 	cnt := 0
 	for _, v := range bPPlant {
@@ -787,7 +853,7 @@ func (c *DPFMAPICaller) StorageBin(
 	rows, err := c.db.Query(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_storage_bin_data
-		WHERE (Product, BusinessPartner, Plant, StorageLocation, StorageBin) IN ( `+repeat+` ) 
+		WHERE (Product, BusinessPartner, Plant, StorageLocation, StorageBin) IN ( `+repeat+` )
 		ORDER BY IsMarkedForDeletion DESC, Product DESC, InventoryBlockStatus DESC, BusinessPartner DESC;`, args...,
 	)
 	if err != nil {
@@ -818,7 +884,7 @@ func (c *DPFMAPICaller) StorageBins(
 	rows, err := c.db.Query(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_storage_bin_data
-		WHERE Product = ? AND BusinessPartner = ? 
+		WHERE Product = ? AND BusinessPartner = ?
 		ORDER BY IsMarkedForDeletion DESC, Product DESC, InventoryBlockStatus DESC, BusinessPartner DESC;`, product, *businessPartner,
 	)
 	if err != nil {
@@ -836,16 +902,16 @@ func (c *DPFMAPICaller) StorageBins(
 	return data
 }
 
-func (c *DPFMAPICaller) WorkScheduling(
+func (c *DPFMAPICaller) Production(
 	mtx *sync.Mutex,
 	input *dpfm_api_input_reader.SDC,
 	output *dpfm_api_output_formatter.SDC,
 	errs *[]error,
 	log *logger.Logger,
-) *[]dpfm_api_output_formatter.WorkScheduling {
+) *[]dpfm_api_output_formatter.Production {
 	var args []interface{}
 	product := input.General.Product
-	bPPlant := input.General.BPPlant
+	bPPlant := input.General.BusinessPartner[0].BPPlant
 
 	cnt := 0
 	for _, v := range bPPlant {
@@ -856,8 +922,8 @@ func (c *DPFMAPICaller) WorkScheduling(
 	repeat := strings.Repeat("(?,?,?),", cnt-1) + "(?,?,?)"
 	rows, err := c.db.Query(
 		`SELECT *
-		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_work_scheduling_data
-		WHERE (Product, BusinessPartner, Plant) IN ( `+repeat+` ) 
+		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_production_data
+		WHERE (Product, BusinessPartner, Plant) IN ( `+repeat+` )
 		ORDER BY IsMarkedForDeletion DESC, Product DESC, BusinessPartner DESC;`, args...,
 	)
 	if err != nil {
@@ -866,7 +932,7 @@ func (c *DPFMAPICaller) WorkScheduling(
 	}
 	defer rows.Close()
 
-	data, err := dpfm_api_output_formatter.ConvertToWorkScheduling(rows)
+	data, err := dpfm_api_output_formatter.ConvertToProduction(rows)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
@@ -875,20 +941,20 @@ func (c *DPFMAPICaller) WorkScheduling(
 	return data
 }
 
-func (c *DPFMAPICaller) WorkSchedulings(
+func (c *DPFMAPICaller) Productions(
 	mtx *sync.Mutex,
 	input *dpfm_api_input_reader.SDC,
 	output *dpfm_api_output_formatter.SDC,
 	errs *[]error,
 	log *logger.Logger,
-) *[]dpfm_api_output_formatter.WorkScheduling {
+) *[]dpfm_api_output_formatter.Production {
 	product := input.General.Product
 	businessPartner := input.BusinessPartnerID
 
 	rows, err := c.db.Query(
 		`SELECT *
-		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_work_scheduling_data
-		WHERE Product = ? AND BusinessPartner = ? 
+		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_production_data
+		WHERE Product = ? AND BusinessPartner = ?
 		ORDER BY IsMarkedForDeletion DESC, Product DESC, BusinessPartner DESC;`, product, *businessPartner,
 	)
 	if err != nil {
@@ -897,7 +963,7 @@ func (c *DPFMAPICaller) WorkSchedulings(
 	}
 	defer rows.Close()
 
-	data, err := dpfm_api_output_formatter.ConvertToWorkScheduling(rows)
+	data, err := dpfm_api_output_formatter.ConvertToProduction(rows)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil
@@ -927,7 +993,7 @@ func (c *DPFMAPICaller) Tax(
 	rows, err := c.db.Query(
 		`SELECT Product, Country, ProductTaxCategory, ProductTaxClassification
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_tax_data
-		WHERE (Product, Country, ProductTaxCategory) IN ( `+repeat+` ) 
+		WHERE (Product, Country, ProductTaxCategory) IN ( `+repeat+` )
 		ORDER BY Product DESC;`, args...,
 	)
 	if err != nil {
@@ -957,7 +1023,7 @@ func (c *DPFMAPICaller) Taxes(
 	rows, err := c.db.Query(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_tax_data
-		WHERE Product = ? 
+		WHERE Product = ?
 		ORDER BY Product DESC;`, product,
 	)
 	if err != nil {
@@ -984,7 +1050,7 @@ func (c *DPFMAPICaller) Accounting(
 ) *[]dpfm_api_output_formatter.Accounting {
 	var args []interface{}
 	product := input.General.Product
-	bPPlant := input.General.BPPlant
+	bPPlant := input.General.BusinessPartner[0].BPPlant
 
 	cnt := 0
 	for _, v := range bPPlant {
@@ -996,7 +1062,7 @@ func (c *DPFMAPICaller) Accounting(
 	rows, err := c.db.Query(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_accounting_data
-		WHERE (Product, BusinessPartner, Plant) IN ( `+repeat+` ) 
+		WHERE (Product, BusinessPartner, Plant) IN ( `+repeat+` )
 		ORDER BY IsMarkedForDeletion DESC, Product DESC, BusinessPartner DESC, Plant DESC;`, args...,
 	)
 	if err != nil {
@@ -1027,7 +1093,7 @@ func (c *DPFMAPICaller) Accountings(
 	rows, err := c.db.Query(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_accounting_data
-		WHERE Product = ? AND BusinessPartner = ? 
+		WHERE Product = ? AND BusinessPartner = ?
 		ORDER BY IsMarkedForDeletion DESC, Product DESC, BusinessPartner DESC, Plant DESC;`, product, *businessPartner,
 	)
 	if err != nil {
@@ -1037,69 +1103,6 @@ func (c *DPFMAPICaller) Accountings(
 	defer rows.Close()
 
 	data, err := dpfm_api_output_formatter.ConvertToAccounting(rows)
-	if err != nil {
-		*errs = append(*errs, err)
-		return nil
-	}
-
-	return data
-}
-
-func (c *DPFMAPICaller) GeneralsByBP(
-	mtx *sync.Mutex,
-	input *dpfm_api_input_reader.SDC,
-	output *dpfm_api_output_formatter.SDC,
-	errs *[]error,
-	log *logger.Logger,
-) *[]dpfm_api_output_formatter.General {
-	where := fmt.Sprintf("WHERE bp.BusinessPartner = %d ", *input.BusinessPartnerID)
-	if input.General.IsMarkedForDeletion != nil {
-		where = fmt.Sprintf("%s AND g.IsMarkedForDeletion = %v", where, *input.General.IsMarkedForDeletion)
-	}
-
-	rows, err := c.db.Query(
-		`SELECT g.Product, g.ProductGroup, g.BaseUnit, g.ValidityStartDate, g.IsMarkedForDeletion
-		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_business_partner_data as bp
-		INNER JOIN DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_general_data as g
-		ON bp.Product = g.Product
-		` + where + ` ORDER BY bp.IsMarkedForDeletion DESC, bp.Product DESC, bp.BusinessPartner DESC;`,
-	)
-	if err != nil {
-		*errs = append(*errs, err)
-		return nil
-	}
-	defer rows.Close()
-
-	data, err := dpfm_api_output_formatter.ConvertToGeneralsByBP(rows)
-	if err != nil {
-		*errs = append(*errs, err)
-		return nil
-	}
-
-	return data
-}
-
-func (c *DPFMAPICaller) ProductDescsByBP(
-	mtx *sync.Mutex,
-	input *dpfm_api_input_reader.SDC,
-	output *dpfm_api_output_formatter.SDC,
-	errs *[]error,
-	log *logger.Logger,
-) *[]dpfm_api_output_formatter.ProductDescByBP {
-	where := fmt.Sprintf("WHERE BusinessPartner = %d ", *input.BusinessPartnerID)
-
-	rows, err := c.db.Query(
-		`SELECT Product, BusinessPartner, Language, ProductDescription
-		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_product_desc_by_bp_data
-		` + where + ` ORDER BY Product DESC, BusinessPartner DESC;`,
-	)
-	if err != nil {
-		*errs = append(*errs, err)
-		return nil
-	}
-	defer rows.Close()
-
-	data, err := dpfm_api_output_formatter.ConvertToProductDescsByBP(rows)
 	if err != nil {
 		*errs = append(*errs, err)
 		return nil

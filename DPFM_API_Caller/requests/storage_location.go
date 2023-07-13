@@ -5,7 +5,8 @@ type StorageLocation struct {
 	BusinessPartner      int     `json:"BusinessPartner"`
 	Plant                string  `json:"Plant"`
 	StorageLocation      string  `json:"StorageLocation"`
-	CreationDate         *string `json:"CreationDate"`
-	InventoryBlockStatus *bool   `json:"InventoryBlockStatus"`
+	BlockStatus 		 *bool   `json:"BlockStatus"`
+	CreationDate         string  `json:"CreationDate"`
+	LastChangeDate       string  `json:"LastChangeDate"`
 	IsMarkedForDeletion  *bool   `json:"IsMarkedForDeletion"`
 }

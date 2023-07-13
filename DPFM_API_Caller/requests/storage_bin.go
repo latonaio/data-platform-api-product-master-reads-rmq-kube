@@ -6,7 +6,8 @@ type StorageBin struct {
 	Plant               string  `json:"Plant"`
 	StorageLocation     string  `json:"StorageLocation"`
 	StorageBin          string  `json:"StorageBin"`
-	CreationDate        *string `json:"CreationDate"`
 	BlockStatus         *bool   `json:"BlockStatus"`
+	CreationDate        string  `json:"CreationDate"`
+	LastChangeDate      string  `json:"LastChangeDate"`
 	IsMarkedForDeletion *bool   `json:"IsMarkedForDeletion"`
 }

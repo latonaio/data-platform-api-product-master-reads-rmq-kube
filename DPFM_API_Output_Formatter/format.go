@@ -20,6 +20,8 @@ func ConvertToGeneral(rows *sql.Rows) (*[]General, error) {
 			&pm.ProductType,
 			&pm.BaseUnit,
 			&pm.ValidityStartDate,
+			&pm.ValidityEndDate,
+			&pm.ItemCategory,
 			&pm.ProductGroup,
 			&pm.GrossWeight,
 			&pm.NetWeight,
@@ -29,9 +31,10 @@ func ConvertToGeneral(rows *sql.Rows) (*[]General, error) {
 			&pm.SizeOrDimensionText,
 			&pm.ProductStandardID,
 			&pm.IndustryStandardName,
-			&pm.ItemCategory,
 			&pm.CountryOfOrigin,
 			&pm.CountryOfOriginLanguage,
+			&pm.LocalRegionOfOrigin,
+			&pm.LocalSubRegionOfOrigin,
 			&pm.BarcodeType,
 			&pm.ProductAccountAssignmentGroup,
 			&pm.CreationDate,
@@ -45,11 +48,12 @@ func ConvertToGeneral(rows *sql.Rows) (*[]General, error) {
 
 		data := pm
 		general = append(general, General{
-
 			Product:                       data.Product,
 			ProductType:                   data.ProductType,
 			BaseUnit:                      data.BaseUnit,
 			ValidityStartDate:             data.ValidityStartDate,
+			ValidityEndDate:               data.ValidityEndDate,
+			ItemCategory:                  data.ItemCategory,
 			ProductGroup:                  data.ProductGroup,
 			GrossWeight:                   data.GrossWeight,
 			NetWeight:                     data.NetWeight,
@@ -59,9 +63,10 @@ func ConvertToGeneral(rows *sql.Rows) (*[]General, error) {
 			SizeOrDimensionText:           data.SizeOrDimensionText,
 			ProductStandardID:             data.ProductStandardID,
 			IndustryStandardName:          data.IndustryStandardName,
-			ItemCategory:                  data.ItemCategory,
 			CountryOfOrigin:               data.CountryOfOrigin,
 			CountryOfOriginLanguage:       data.CountryOfOriginLanguage,
+			LocalRegionOfOrigin:           data.LocalRegionOfOrigin,
+			LocalSubRegionOfOrigin:        data.LocalSubRegionOfOrigin,
 			BarcodeType:                   data.BarcodeType,
 			ProductAccountAssignmentGroup: data.ProductAccountAssignmentGroup,
 			CreationDate:                  data.CreationDate,
@@ -75,6 +80,46 @@ func ConvertToGeneral(rows *sql.Rows) (*[]General, error) {
 	}
 
 	return &general, nil
+}
+
+func ConvertToProductDescription(rows *sql.Rows) (*[]ProductDescription, error) {
+	defer rows.Close()
+	productDescription := make([]ProductDescription, 0)
+
+	i := 0
+	for rows.Next() {
+		i++
+		pm := &requests.ProductDescription{}
+
+		err := rows.Scan(
+			&pm.Product,
+			&pm.Language,
+			&pm.ProductDescription,
+			&pm.CreationDate,
+			&pm.LastChangeDate,
+			&pm.IsMarkedForDeletion,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return &productDescription, err
+		}
+
+		data := pm
+		productDescription = append(productDescription, ProductDescription{
+			Product:             data.Product,
+			Language:            data.Language,
+			ProductDescription:  data.ProductDescription,
+			CreationDate:        data.CreationDate,
+			LastChangeDate:      data.LastChangeDate,
+			IsMarkedForDeletion: data.IsMarkedForDeletion,
+		})
+	}
+	if i == 0 {
+		fmt.Printf("DBに対象のレコードが存在しません。")
+		return &productDescription, nil
+	}
+
+	return &productDescription, nil
 }
 
 func ConvertToProductDescByBP(rows *sql.Rows) (*[]ProductDescByBP, error) {
@@ -91,6 +136,9 @@ func ConvertToProductDescByBP(rows *sql.Rows) (*[]ProductDescByBP, error) {
 			&pm.BusinessPartner,
 			&pm.Language,
 			&pm.ProductDescription,
+			&pm.CreationDate,
+			&pm.LastChangeDate,
+			&pm.IsMarkedForDeletion,
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
@@ -99,10 +147,13 @@ func ConvertToProductDescByBP(rows *sql.Rows) (*[]ProductDescByBP, error) {
 
 		data := pm
 		productDescByBP = append(productDescByBP, ProductDescByBP{
-			Product:            data.Product,
-			BusinessPartner:    data.BusinessPartner,
-			Language:           data.Language,
-			ProductDescription: data.ProductDescription,
+			Product:             data.Product,
+			BusinessPartner:     data.BusinessPartner,
+			Language:            data.Language,
+			ProductDescription:  data.ProductDescription,
+			CreationDate:        data.CreationDate,
+			LastChangeDate:      data.LastChangeDate,
+			IsMarkedForDeletion: data.IsMarkedForDeletion,
 		})
 	}
 	if i == 0 {
@@ -111,6 +162,36 @@ func ConvertToProductDescByBP(rows *sql.Rows) (*[]ProductDescByBP, error) {
 	}
 
 	return &productDescByBP, nil
+}
+
+func ConvertToProductDescsByBP(rows *sql.Rows) (*[]ProductDescByBP, error) {
+	defer rows.Close()
+	productDescsByBP := make([]ProductDescByBP, 0)
+	i := 0
+	for rows.Next() {
+		i++
+		pm := ProductDescByBP{}
+		err := rows.Scan(
+			&pm.Product,
+			&pm.BusinessPartner,
+			&pm.Language,
+			&pm.ProductDescription,
+			&pm.CreationDate,
+			&pm.LastChangeDate,
+			&pm.IsMarkedForDeletion,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return &productDescsByBP, err
+		}
+		productDescsByBP = append(productDescsByBP, pm)
+	}
+	if i == 0 {
+		fmt.Printf("DBに対象のレコードが存在しません。")
+		return &productDescsByBP, nil
+	}
+
+	return &productDescsByBP, nil
 }
 
 func ConvertToBusinessPartner(rows *sql.Rows) (*[]BusinessPartner, error) {
@@ -125,9 +206,11 @@ func ConvertToBusinessPartner(rows *sql.Rows) (*[]BusinessPartner, error) {
 		err := rows.Scan(
 			&pm.Product,
 			&pm.BusinessPartner,
-			&pm.ValidityEndDate,
 			&pm.ValidityStartDate,
+			&pm.ValidityEndDate,
 			&pm.BusinessPartnerProduct,
+			&pm.CreationDate,
+			&pm.LastChangeDate,
 			&pm.IsMarkedForDeletion,
 		)
 		if err != nil {
@@ -139,9 +222,11 @@ func ConvertToBusinessPartner(rows *sql.Rows) (*[]BusinessPartner, error) {
 		businessPartner = append(businessPartner, BusinessPartner{
 			Product:                data.Product,
 			BusinessPartner:        data.BusinessPartner,
-			ValidityEndDate:        data.ValidityEndDate,
 			ValidityStartDate:      data.ValidityStartDate,
+			ValidityEndDate:        data.ValidityEndDate,
 			BusinessPartnerProduct: data.BusinessPartnerProduct,
+			CreationDate:           data.CreationDate,
+			LastChangeDate:         data.LastChangeDate,
 			IsMarkedForDeletion:    data.IsMarkedForDeletion,
 		})
 	}
@@ -151,154 +236,6 @@ func ConvertToBusinessPartner(rows *sql.Rows) (*[]BusinessPartner, error) {
 	}
 
 	return &businessPartner, nil
-}
-
-func ConvertToProductDescription(rows *sql.Rows) (*[]ProductDescription, error) {
-	defer rows.Close()
-	productDescription := make([]ProductDescription, 0)
-
-	i := 0
-	for rows.Next() {
-		i++
-		pm := &requests.ProductDescription{}
-
-		err := rows.Scan(
-			&pm.Product,
-			&pm.Language,
-			&pm.ProductDescription,
-		)
-		if err != nil {
-			fmt.Printf("err = %+v \n", err)
-			return &productDescription, err
-		}
-
-		data := pm
-		productDescription = append(productDescription, ProductDescription{
-			Product:            data.Product,
-			Language:           data.Language,
-			ProductDescription: data.ProductDescription,
-		})
-	}
-	if i == 0 {
-		fmt.Printf("DBに対象のレコードが存在しません。")
-		return &productDescription, nil
-	}
-
-	return &productDescription, nil
-}
-
-func ConvertToAllergen(rows *sql.Rows) (*[]Allergen, error) {
-	defer rows.Close()
-	allergen := make([]Allergen, 0)
-
-	i := 0
-	for rows.Next() {
-		i++
-		pm := &requests.Allergen{}
-
-		err := rows.Scan(
-			&pm.Product,
-			&pm.BusinessPartner,
-			&pm.Allergen,
-			&pm.AllergenIsContained,
-			&pm.IsMarkedForDeletion,
-		)
-		if err != nil {
-			fmt.Printf("err = %+v \n", err)
-			return &allergen, err
-		}
-
-		data := pm
-		allergen = append(allergen, Allergen{
-			Product:             data.Product,
-			BusinessPartner:     data.BusinessPartner,
-			Allergen:            data.Allergen,
-			AllergenIsContained: data.AllergenIsContained,
-			IsMarkedForDeletion: data.IsMarkedForDeletion,
-		})
-	}
-	if i == 0 {
-		fmt.Printf("DBに対象のレコードが存在しません。")
-		return &allergen, nil
-	}
-
-	return &allergen, nil
-}
-
-func ConvertToNutritionalInfo(rows *sql.Rows) (*[]NutritionalInfo, error) {
-	defer rows.Close()
-	nutritionalInfo := make([]NutritionalInfo, 0)
-
-	i := 0
-	for rows.Next() {
-		i++
-		pm := &requests.NutritionalInfo{}
-
-		err := rows.Scan(
-			&pm.Product,
-			&pm.BusinessPartner,
-			&pm.Nutrient,
-			&pm.NutrientContent,
-			&pm.NutrientContentUnit,
-		)
-		if err != nil {
-			fmt.Printf("err = %+v \n", err)
-			return &nutritionalInfo, err
-		}
-
-		data := pm
-		nutritionalInfo = append(nutritionalInfo, NutritionalInfo{
-			Product:             data.Product,
-			BusinessPartner:     data.BusinessPartner,
-			Nutrient:            data.Nutrient,
-			NutrientContent:     data.NutrientContent,
-			NutrientContentUnit: data.NutrientContentUnit,
-		})
-	}
-	if i == 0 {
-		fmt.Printf("DBに対象のレコードが存在しません。")
-		return &nutritionalInfo, nil
-	}
-
-	return &nutritionalInfo, nil
-}
-
-func ConvertToCalories(rows *sql.Rows) (*[]Calories, error) {
-	defer rows.Close()
-	calories := make([]Calories, 0)
-
-	i := 0
-	for rows.Next() {
-		i++
-		pm := &requests.Calories{}
-
-		err := rows.Scan(
-			&pm.Product,
-			&pm.BusinessPartner,
-			&pm.CaloryUnitQuantity,
-			&pm.Calories,
-			&pm.CaloryUnit,
-		)
-		if err != nil {
-			fmt.Printf("err = %+v \n", err)
-			return &calories, err
-		}
-
-		data := pm
-		calories = append(calories, Calories{
-			Product:            data.Product,
-			BusinessPartner:    data.BusinessPartner,
-			CaloryUnitQuantity: data.CaloryUnitQuantity,
-			Calories:           data.Calories,
-			CaloryUnit:         data.CaloryUnit,
-		})
-	}
-	if i == 0 {
-		fmt.Printf("DBに対象のレコードが存在しません。")
-		return &calories, nil
-	}
-
-	return &calories, nil
 }
 
 func ConvertToBPPlant(rows *sql.Rows) (*[]BPPlant, error) {
@@ -314,27 +251,30 @@ func ConvertToBPPlant(rows *sql.Rows) (*[]BPPlant, error) {
 			&pm.Product,
 			&pm.BusinessPartner,
 			&pm.Plant,
-			&pm.AvailabilityCheckType,
 			&pm.MRPType,
 			&pm.MRPController,
-			&pm.ReorderThresholdQuantity,
-			&pm.PlanningTimeFence,
+			&pm.ReorderThresholdQuantityInBaseUnit,
+			&pm.PlanningTimeFenceInDays,
 			&pm.MRPPlanningCalendar,
 			&pm.SafetyStockQuantityInBaseUnit,
 			&pm.SafetyDuration,
+			&pm.SafetyDurationUnit,
 			&pm.MaximumStockQuantityInBaseUnit,
 			&pm.MinimumDeliveryQuantityInBaseUnit,
 			&pm.MinimumDeliveryLotSizeQuantityInBaseUnit,
+			&pm.StandardDeliveryQuantityInBaseUnit,
 			&pm.StandardDeliveryLotSizeQuantityInBaseUnit,
-			&pm.DeliveryLotSizeRoundingQuantityInBaseUnit,
-			&pm.MaximumDeliveryLotSizeQuantityInBaseUnit,
 			&pm.MaximumDeliveryQuantityInBaseUnit,
+			&pm.MaximumDeliveryLotSizeQuantityInBaseUnit,
+			&pm.DeliveryLotSizeRoundingQuantityInBaseUnit,
 			&pm.DeliveryLotSizeIsFixed,
-			&pm.StandardDeliveryDurationInDays,
+			&pm.StandardDeliveryDuration,
+			&pm.StandardDeliveryDurationUnit,
 			&pm.IsBatchManagementRequired,
 			&pm.BatchManagementPolicy,
-			&pm.InventoryUnit,
 			&pm.ProfitCenter,
+			&pm.CreationDate,
+			&pm.LastChangeDate,
 			&pm.IsMarkedForDeletion,
 		)
 		if err != nil {
@@ -344,30 +284,33 @@ func ConvertToBPPlant(rows *sql.Rows) (*[]BPPlant, error) {
 
 		data := pm
 		bPPlant = append(bPPlant, BPPlant{
-			Product:                                  data.Product,
-			BusinessPartner:                          data.BusinessPartner,
-			Plant:                                    data.Plant,
-			AvailabilityCheckType:                    data.AvailabilityCheckType,
-			ProfitCenter:                             data.ProfitCenter,
-			MRPType:                                  data.MRPType,
-			MRPController:                            data.MRPController,
-			ReorderThresholdQuantity:                 data.ReorderThresholdQuantity,
-			PlanningTimeFence:                        data.PlanningTimeFence,
-			MRPPlanningCalendar:                      data.MRPPlanningCalendar,
-			SafetyStockQuantityInBaseUnit:            data.SafetyStockQuantityInBaseUnit,
-			SafetyDuration:                           data.SafetyDuration,
-			MaximumStockQuantityInBaseUnit:           data.MaximumStockQuantityInBaseUnit,
-			MinimumDeliveryQuantityInBaseUnit:        data.MinimumDeliveryQuantityInBaseUnit,
-			MinimumDeliveryLotSizeQuantityInBaseUnit: data.MinimumDeliveryLotSizeQuantityInBaseUnit,
+			Product:                                   data.Product,
+			BusinessPartner:                           data.BusinessPartner,
+			Plant:                                     data.Plant,
+			MRPType:                                   data.MRPType,
+			MRPController:                             data.MRPController,
+			ReorderThresholdQuantityInBaseUnit:        data.ReorderThresholdQuantityInBaseUnit,
+			PlanningTimeFenceInDays:                   data.PlanningTimeFenceInDays,
+			MRPPlanningCalendar:                       data.MRPPlanningCalendar,
+			SafetyStockQuantityInBaseUnit:             data.SafetyStockQuantityInBaseUnit,
+			SafetyDuration:                            data.SafetyDuration,
+			SafetyDurationUnit:                        data.SafetyDurationUnit,
+			MaximumStockQuantityInBaseUnit:            data.MaximumStockQuantityInBaseUnit,
+			MinimumDeliveryQuantityInBaseUnit:         data.MinimumDeliveryQuantityInBaseUnit,
+			MinimumDeliveryLotSizeQuantityInBaseUnit:  data.MinimumDeliveryLotSizeQuantityInBaseUnit,
+			StandardDeliveryQuantityInBaseUnit:        data.StandardDeliveryQuantityInBaseUnit,
 			StandardDeliveryLotSizeQuantityInBaseUnit: data.StandardDeliveryLotSizeQuantityInBaseUnit,
-			DeliveryLotSizeRoundingQuantityInBaseUnit: data.DeliveryLotSizeRoundingQuantityInBaseUnit,
-			MaximumDeliveryLotSizeQuantityInBaseUnit:  data.MaximumDeliveryLotSizeQuantityInBaseUnit,
 			MaximumDeliveryQuantityInBaseUnit:         data.MaximumDeliveryQuantityInBaseUnit,
+			MaximumDeliveryLotSizeQuantityInBaseUnit:  data.MaximumDeliveryLotSizeQuantityInBaseUnit,
+			DeliveryLotSizeRoundingQuantityInBaseUnit: data.DeliveryLotSizeRoundingQuantityInBaseUnit,
 			DeliveryLotSizeIsFixed:                    data.DeliveryLotSizeIsFixed,
-			StandardDeliveryDurationInDays:            data.StandardDeliveryDurationInDays,
+			StandardDeliveryDuration:                  data.StandardDeliveryDuration,
+			StandardDeliveryDurationUnit:              data.StandardDeliveryDurationUnit,
 			IsBatchManagementRequired:                 data.IsBatchManagementRequired,
 			BatchManagementPolicy:                     data.BatchManagementPolicy,
-			InventoryUnit:                             data.InventoryUnit,
+			ProfitCenter:                              data.ProfitCenter,
+			CreationDate:                              data.CreationDate,
+			LastChangeDate:                            data.LastChangeDate,
 			IsMarkedForDeletion:                       data.IsMarkedForDeletion,
 		})
 	}
@@ -393,6 +336,9 @@ func ConvertToTax(rows *sql.Rows) (*[]Tax, error) {
 			&pm.Country,
 			&pm.ProductTaxCategory,
 			&pm.ProductTaxClassification,
+			&pm.CreationDate,
+			&pm.LastChangeDate,
+			&pm.IsMarkedForDeletion,
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
@@ -405,6 +351,9 @@ func ConvertToTax(rows *sql.Rows) (*[]Tax, error) {
 			Country:                  data.Country,
 			ProductTaxCategory:       data.ProductTaxCategory,
 			ProductTaxClassification: data.ProductTaxClassification,
+			CreationDate:             data.CreationDate,
+			LastChangeDate:           data.LastChangeDate,
+			IsMarkedForDeletion:      data.IsMarkedForDeletion,
 		})
 	}
 	if i == 0 {
@@ -433,7 +382,8 @@ func ConvertToAccounting(rows *sql.Rows) (*[]Accounting, error) {
 			&pm.PriceUnitQty,
 			&pm.StandardPrice,
 			&pm.MovingAveragePrice,
-			&pm.PriceLastChangeDate,
+			&pm.CreationDate,
+			&pm.LastChangeDate,
 			&pm.IsMarkedForDeletion,
 		)
 		if err != nil {
@@ -451,7 +401,8 @@ func ConvertToAccounting(rows *sql.Rows) (*[]Accounting, error) {
 			PriceUnitQty:        data.PriceUnitQty,
 			StandardPrice:       data.StandardPrice,
 			MovingAveragePrice:  data.MovingAveragePrice,
-			PriceLastChangeDate: data.PriceLastChangeDate,
+			CreationDate:        data.CreationDate,
+			LastChangeDate:      data.LastChangeDate,
 			IsMarkedForDeletion: data.IsMarkedForDeletion,
 		})
 	}
@@ -477,8 +428,9 @@ func ConvertToStorageLocation(rows *sql.Rows) (*[]StorageLocation, error) {
 			&pm.BusinessPartner,
 			&pm.Plant,
 			&pm.StorageLocation,
+			&pm.BlockStatus,
 			&pm.CreationDate,
-			&pm.InventoryBlockStatus,
+			&pm.LastChangeDate,
 			&pm.IsMarkedForDeletion,
 		)
 		if err != nil {
@@ -488,13 +440,14 @@ func ConvertToStorageLocation(rows *sql.Rows) (*[]StorageLocation, error) {
 
 		data := pm
 		storageLocation = append(storageLocation, StorageLocation{
-			Product:              data.Product,
-			BusinessPartner:      data.BusinessPartner,
-			Plant:                data.Plant,
-			StorageLocation:      data.StorageLocation,
-			CreationDate:         data.CreationDate,
-			InventoryBlockStatus: data.InventoryBlockStatus,
-			IsMarkedForDeletion:  data.IsMarkedForDeletion,
+			Product:             data.Product,
+			BusinessPartner:     data.BusinessPartner,
+			Plant:               data.Plant,
+			StorageLocation:     data.StorageLocation,
+			BlockStatus:         data.BlockStatus,
+			CreationDate:        data.CreationDate,
+			LastChangeDate:      data.LastChangeDate,
+			IsMarkedForDeletion: data.IsMarkedForDeletion,
 		})
 	}
 	if i == 0 {
@@ -520,8 +473,9 @@ func ConvertToStorageBin(rows *sql.Rows) (*[]StorageBin, error) {
 			&pm.Plant,
 			&pm.StorageLocation,
 			&pm.StorageBin,
-			&pm.CreationDate,
 			&pm.BlockStatus,
+			&pm.CreationDate,
+			&pm.LastChangeDate,
 			&pm.IsMarkedForDeletion,
 		)
 		if err != nil {
@@ -536,8 +490,9 @@ func ConvertToStorageBin(rows *sql.Rows) (*[]StorageBin, error) {
 			Plant:               data.Plant,
 			StorageLocation:     data.StorageLocation,
 			StorageBin:          data.StorageBin,
-			CreationDate:        data.CreationDate,
 			BlockStatus:         data.BlockStatus,
+			CreationDate:        data.CreationDate,
+			LastChangeDate:      data.LastChangeDate,
 			IsMarkedForDeletion: data.IsMarkedForDeletion,
 		})
 	}
@@ -566,8 +521,8 @@ func ConvertToMRPArea(rows *sql.Rows) (*[]MRPArea, error) {
 			&pm.StorageLocationForMRP,
 			&pm.MRPType,
 			&pm.MRPController,
-			&pm.ReorderThresholdQuantity,
-			&pm.PlanningTimeFence,
+			&pm.ReorderThresholdQuantityInBaseUnit,
+			&pm.PlanningTimeFenceInDays,
 			&pm.MRPPlanningCalendar,
 			&pm.SafetyStockQuantityInBaseUnit,
 			&pm.SafetyDuration,
@@ -579,7 +534,9 @@ func ConvertToMRPArea(rows *sql.Rows) (*[]MRPArea, error) {
 			&pm.MaximumDeliveryLotSizeQuantityInBaseUnit,
 			&pm.MaximumDeliveryQuantityInBaseUnit,
 			&pm.DeliveryLotSizeIsFixed,
-			&pm.StandardDeliveryDurationInDays,
+			&pm.StandardDeliveryDurationUnit,
+			&pm.CreationDate,
+			&pm.LastChangeDate,
 			&pm.IsMarkedForDeletion,
 		)
 		if err != nil {
@@ -589,27 +546,32 @@ func ConvertToMRPArea(rows *sql.Rows) (*[]MRPArea, error) {
 
 		data := pm
 		mRPArea = append(mRPArea, MRPArea{
-			Product:                                  data.Product,
-			BusinessPartner:                          data.BusinessPartner,
-			Plant:                                    data.Plant,
-			MRPArea:                                  data.MRPArea,
-			StorageLocationForMRP:                    data.StorageLocationForMRP,
-			MRPType:                                  data.MRPType,
-			MRPController:                            data.MRPController,
-			ReorderThresholdQuantity:                 data.ReorderThresholdQuantity,
-			PlanningTimeFence:                        data.PlanningTimeFence,
-			MRPPlanningCalendar:                      data.MRPPlanningCalendar,
-			SafetyStockQuantityInBaseUnit:            data.SafetyStockQuantityInBaseUnit,
-			SafetyDuration:                           data.SafetyDuration,
-			MaximumStockQuantityInBaseUnit:           data.MaximumStockQuantityInBaseUnit,
-			MinumumDeliveryQuantityInBaseUnit:        data.MinumumDeliveryQuantityInBaseUnit,
-			MinumumDeliveryLotSizeQuantityInBaseUnit: data.MinumumDeliveryLotSizeQuantityInBaseUnit,
+			Product:                                   data.Product,
+			BusinessPartner:                           data.BusinessPartner,
+			Plant:                                     data.Plant,
+			MRPArea:                                   data.MRPArea,
+			MRPType:                                   data.MRPType,
+			MRPController:                             data.MRPController,
+			StorageLocationForMRP:                     data.StorageLocationForMRP,
+			ReorderThresholdQuantityInBaseUnit:        data.ReorderThresholdQuantityInBaseUnit,
+			PlanningTimeFenceInDays:                   data.PlanningTimeFenceInDays,
+			MRPPlanningCalendar:                       data.MRPPlanningCalendar,
+			SafetyStockQuantityInBaseUnit:             data.SafetyStockQuantityInBaseUnit,
+			SafetyDuration:                            data.SafetyDuration,
+			SafetyDurationUnit:                        data.SafetyDurationUnit,
+			MaximumStockQuantityInBaseUnit:            data.MaximumStockQuantityInBaseUnit,
+			MinumumDeliveryQuantityInBaseUnit:         data.MinumumDeliveryQuantityInBaseUnit,
+			MinumumDeliveryLotSizeQuantityInBaseUnit:  data.MinumumDeliveryLotSizeQuantityInBaseUnit,
+			StandardDeliveryQuantityInBaseUnit:        data.StandardDeliveryQuantityInBaseUnit,
 			StandardDeliveryLotSizeQuantityInBaseUnit: data.StandardDeliveryLotSizeQuantityInBaseUnit,
-			DeliveryLotSizeRoundingQuantityInBaseUnit: data.DeliveryLotSizeRoundingQuantityInBaseUnit,
-			MaximumDeliveryLotSizeQuantityInBaseUnit:  data.MaximumDeliveryLotSizeQuantityInBaseUnit,
 			MaximumDeliveryQuantityInBaseUnit:         data.MaximumDeliveryQuantityInBaseUnit,
+			MaximumDeliveryLotSizeQuantityInBaseUnit:  data.MaximumDeliveryLotSizeQuantityInBaseUnit,
+			DeliveryLotSizeRoundingQuantityInBaseUnit: data.DeliveryLotSizeRoundingQuantityInBaseUnit,
 			DeliveryLotSizeIsFixed:                    data.DeliveryLotSizeIsFixed,
-			StandardDeliveryDurationInDays:            data.StandardDeliveryDurationInDays,
+			StandardDeliveryDuration:                  data.StandardDeliveryDuration,
+			StandardDeliveryDurationUnit:              data.StandardDeliveryDurationUnit,
+			CreationDate:                              data.CreationDate,
+			LastChangeDate:                            data.LastChangeDate,
 			IsMarkedForDeletion:                       data.IsMarkedForDeletion,
 		})
 	}
@@ -642,6 +604,8 @@ func ConvertToQuality(rows *sql.Rows) (*[]Quality, error) {
 			&pm.SuplrQualityManagementSystem,
 			&pm.RecrrgInspIntervalTimeInDays,
 			&pm.ProductQualityCertificateType,
+			&pm.CreationDate,
+			&pm.LastChangeDate,
 			&pm.IsMarkedForDeletion,
 		)
 		if err != nil {
@@ -662,6 +626,8 @@ func ConvertToQuality(rows *sql.Rows) (*[]Quality, error) {
 			SuplrQualityManagementSystem:   data.SuplrQualityManagementSystem,
 			RecrrgInspIntervalTimeInDays:   data.RecrrgInspIntervalTimeInDays,
 			ProductQualityCertificateType:  data.ProductQualityCertificateType,
+			CreationDate:                   data.CreationDate,
+			LastChangeDate:                 data.LastChangeDate,
 			IsMarkedForDeletion:            data.IsMarkedForDeletion,
 		})
 	}
@@ -673,117 +639,214 @@ func ConvertToQuality(rows *sql.Rows) (*[]Quality, error) {
 	return &quality, nil
 }
 
-func ConvertToWorkScheduling(rows *sql.Rows) (*[]WorkScheduling, error) {
+func ConvertToProduction(rows *sql.Rows) (*[]Production, error) {
 	defer rows.Close()
-	workScheduling := make([]WorkScheduling, 0)
+	production := make([]Production, 0)
 
 	i := 0
 	for rows.Next() {
 		i++
-		pm := &requests.WorkScheduling{}
+		pm := &requests.Production{}
 
 		err := rows.Scan(
 			&pm.Product,
 			&pm.BusinessPartner,
 			&pm.Plant,
-			&pm.ProductionInvtryManagedLoc,
-			&pm.ProductProcessingTime,
-			&pm.ProductionSupervisor,
+			&pm.ProductionStorageLocation,
+			&pm.ProductProcessingDuration,
 			&pm.ProductProductionQuantityUnit,
-			&pm.ProdnOrderIsBatchRequired,
-			&pm.PDTCompIsMarkedForBackflush,
+			&pm.MinimumProductionQuantityInBaseUnit,
+			&pm.MinimumProductionLotSizeQuantityInBaseUnit,
+			&pm.StandardProductionQuantityInBaseUnit,
+			&pm.StandardProductionLotSizeQuantityInBaseUnit,
+			&pm.MaximumProductionQuantityInBaseUnit,
+			&pm.MaximumProductionLotSizeQuantityInBaseUnit,
+			&pm.ProductionLotSizeRoundingQuantityInBaseUnit,
+			&pm.MinimumProductionQuantityInProductionUnit,
+			&pm.MinimumProductionLotSizeQuantityInProductionUnit,
+			&pm.StandardProductionQuantityInProductionUnit,
+			&pm.StandardProductionLotSizeQuantityInProductionUnit,
+			&pm.MaximumProductionLotSizeQuantityInProductionUnit,
+			&pm.MaximumProductionQuantityInProductionUnit,
+			&pm.ProductionLotSizeRoundingQuantityInProductionUnit,
+			&pm.ProductionLotSizeIsFixed,
+			&pm.ProductIsBatchManagedInProductionPlant,
+			&pm.ProductIsMarkedForBackflush,
 			&pm.ProductionSchedulingProfile,
-			&pm.MinimumLotSizeQuantity,
-			&pm.StandardLotSizeQuantity,
-			&pm.LotSizeRoundingQuantity,
-			&pm.MaximumLotSizeQuantity,
-			&pm.LotSizeIsFixed,
+			&pm.CreationDate,
+			&pm.LastChangeDate,
 			&pm.IsMarkedForDeletion,
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
-			return &workScheduling, err
+			return &production, err
 		}
 
 		data := pm
-		workScheduling = append(workScheduling, WorkScheduling{
-			Product:                       data.Product,
-			BusinessPartner:               data.BusinessPartner,
-			Plant:                         data.Plant,
-			ProductionInvtryManagedLoc:    data.ProductionInvtryManagedLoc,
-			ProductProcessingTime:         data.ProductProcessingTime,
-			ProductionSupervisor:          data.ProductionSupervisor,
-			ProductProductionQuantityUnit: data.ProductProductionQuantityUnit,
-			ProdnOrderIsBatchRequired:     data.ProdnOrderIsBatchRequired,
-			PDTCompIsMarkedForBackflush:   data.PDTCompIsMarkedForBackflush,
-			ProductionSchedulingProfile:   data.ProductionSchedulingProfile,
-			MinimumLotSizeQuantity:        data.MinimumLotSizeQuantity,
-			StandardLotSizeQuantity:       data.StandardLotSizeQuantity,
-			LotSizeRoundingQuantity:       data.LotSizeRoundingQuantity,
-			MaximumLotSizeQuantity:        data.MaximumLotSizeQuantity,
-			LotSizeIsFixed:                data.LotSizeIsFixed,
-			IsMarkedForDeletion:           data.IsMarkedForDeletion,
+		production = append(production, Production{
+			Product:                             data.Product,
+			BusinessPartner:                     data.BusinessPartner,
+			Plant:                               data.Plant,
+			ProductionStorageLocation:           data.ProductionStorageLocation,
+			ProductProcessingDuration:           data.ProductProcessingDuration,
+			ProductProductionQuantityUnit:       data.ProductProductionQuantityUnit,
+			MinimumProductionQuantityInBaseUnit: data.MinimumProductionQuantityInBaseUnit,
+			MinimumProductionLotSizeQuantityInBaseUnit:        data.MinimumProductionLotSizeQuantityInBaseUnit,
+			StandardProductionQuantityInBaseUnit:              data.StandardProductionQuantityInBaseUnit,
+			StandardProductionLotSizeQuantityInBaseUnit:       data.StandardProductionLotSizeQuantityInBaseUnit,
+			MaximumProductionQuantityInBaseUnit:               data.MaximumProductionQuantityInBaseUnit,
+			MaximumProductionLotSizeQuantityInBaseUnit:        data.MaximumProductionLotSizeQuantityInBaseUnit,
+			ProductionLotSizeRoundingQuantityInBaseUnit:       data.ProductionLotSizeRoundingQuantityInBaseUnit,
+			MinimumProductionQuantityInProductionUnit:         data.MinimumProductionQuantityInProductionUnit,
+			MinimumProductionLotSizeQuantityInProductionUnit:  data.MinimumProductionLotSizeQuantityInProductionUnit,
+			StandardProductionQuantityInProductionUnit:        data.StandardProductionQuantityInProductionUnit,
+			StandardProductionLotSizeQuantityInProductionUnit: data.StandardProductionLotSizeQuantityInProductionUnit,
+			MaximumProductionLotSizeQuantityInProductionUnit:  data.MaximumProductionLotSizeQuantityInProductionUnit,
+			MaximumProductionQuantityInProductionUnit:         data.MaximumProductionQuantityInProductionUnit,
+			ProductionLotSizeRoundingQuantityInProductionUnit: data.ProductionLotSizeRoundingQuantityInProductionUnit,
+			ProductionLotSizeIsFixed:                          data.ProductionLotSizeIsFixed,
+			ProductIsBatchManagedInProductionPlant:            data.ProductIsBatchManagedInProductionPlant,
+			ProductIsMarkedForBackflush:                       data.ProductIsMarkedForBackflush,
+			ProductionSchedulingProfile:                       data.ProductionSchedulingProfile,
+			CreationDate:                                      data.CreationDate,
+			LastChangeDate:                                    data.LastChangeDate,
+			IsMarkedForDeletion:                               data.IsMarkedForDeletion,
 		})
 	}
 	if i == 0 {
 		fmt.Printf("DBに対象のレコードが存在しません。")
-		return &workScheduling, nil
+		return &production, nil
 	}
 
-	return &workScheduling, nil
+	return &production, nil
 }
 
-func ConvertToGeneralsByBP(rows *sql.Rows) (*[]General, error) {
+func ConvertToAllergen(rows *sql.Rows) (*[]Allergen, error) {
 	defer rows.Close()
-	generalsByBP := make([]General, 0)
+	allergen := make([]Allergen, 0)
+
 	i := 0
 	for rows.Next() {
 		i++
-		pm := General{}
+		pm := &requests.Allergen{}
+
 		err := rows.Scan(
 			&pm.Product,
-			&pm.ProductGroup,
-			&pm.BaseUnit,
-			&pm.ValidityStartDate,
+			&pm.BusinessPartner,
+			&pm.Allergen,
+			&pm.AllergenIsContained,
+			&pm.CreationDate,
+			&pm.LastChangeDate,
 			&pm.IsMarkedForDeletion,
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
-			return &generalsByBP, err
+			return &allergen, err
 		}
-		generalsByBP = append(generalsByBP, pm)
+
+		data := pm
+		allergen = append(allergen, Allergen{
+			Product:             data.Product,
+			BusinessPartner:     data.BusinessPartner,
+			Allergen:            data.Allergen,
+			AllergenIsContained: data.AllergenIsContained,
+			CreationDate:        data.CreationDate,
+			LastChangeDate:      data.LastChangeDate,
+			IsMarkedForDeletion: data.IsMarkedForDeletion,
+		})
 	}
 	if i == 0 {
 		fmt.Printf("DBに対象のレコードが存在しません。")
-		return &generalsByBP, nil
+		return &allergen, nil
 	}
 
-	return &generalsByBP, nil
+	return &allergen, nil
 }
 
-func ConvertToProductDescsByBP(rows *sql.Rows) (*[]ProductDescByBP, error) {
+func ConvertToNutritionalInfo(rows *sql.Rows) (*[]NutritionalInfo, error) {
 	defer rows.Close()
-	productDescsByBP := make([]ProductDescByBP, 0)
+	nutritionalInfo := make([]NutritionalInfo, 0)
+
 	i := 0
 	for rows.Next() {
 		i++
-		pm := ProductDescByBP{}
+		pm := &requests.NutritionalInfo{}
+
 		err := rows.Scan(
 			&pm.Product,
 			&pm.BusinessPartner,
-			&pm.Language,
-			&pm.ProductDescription,
+			&pm.Nutrient,
+			&pm.NutrientContent,
+			&pm.NutrientContentUnit,
+			&pm.CreationDate,
+			&pm.LastChangeDate,
+			&pm.IsMarkedForDeletion,
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
-			return &productDescsByBP, err
+			return &nutritionalInfo, err
 		}
-		productDescsByBP = append(productDescsByBP, pm)
+
+		data := pm
+		nutritionalInfo = append(nutritionalInfo, NutritionalInfo{
+			Product:             data.Product,
+			BusinessPartner:     data.BusinessPartner,
+			Nutrient:            data.Nutrient,
+			NutrientContent:     data.NutrientContent,
+			NutrientContentUnit: data.NutrientContentUnit,
+			CreationDate:        data.CreationDate,
+			LastChangeDate:      data.LastChangeDate,
+			IsMarkedForDeletion: data.IsMarkedForDeletion,
+		})
 	}
 	if i == 0 {
 		fmt.Printf("DBに対象のレコードが存在しません。")
-		return &productDescsByBP, nil
+		return &nutritionalInfo, nil
 	}
 
-	return &productDescsByBP, nil
+	return &nutritionalInfo, nil
+}
+
+func ConvertToCalories(rows *sql.Rows) (*[]Calories, error) {
+	defer rows.Close()
+	calories := make([]Calories, 0)
+
+	i := 0
+	for rows.Next() {
+		i++
+		pm := &requests.Calories{}
+
+		err := rows.Scan(
+			&pm.Product,
+			&pm.BusinessPartner,
+			&pm.Calories,
+			&pm.CaloryUnit,
+			&pm.CaloryUnitQuantity,
+			&pm.CreationDate,
+			&pm.LastChangeDate,
+			&pm.IsMarkedForDeletion,
+		)
+		if err != nil {
+			fmt.Printf("err = %+v \n", err)
+			return &calories, err
+		}
+
+		data := pm
+		calories = append(calories, Calories{
+			Product:             data.Product,
+			BusinessPartner:     data.BusinessPartner,
+			Calories:            data.Calories,
+			CaloryUnit:          data.CaloryUnit,
+			CaloryUnitQuantity:  data.CaloryUnitQuantity,
+			CreationDate:        data.CreationDate,
+			LastChangeDate:      data.LastChangeDate,
+			IsMarkedForDeletion: data.IsMarkedForDeletion,
+		})
+	}
+	if i == 0 {
+		fmt.Printf("DBに対象のレコードが存在しません。")
+		return &calories, nil
+	}
+
+	return &calories, nil
 }

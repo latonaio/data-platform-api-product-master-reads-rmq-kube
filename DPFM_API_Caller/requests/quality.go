@@ -12,5 +12,7 @@ type Quality struct {
 	SuplrQualityManagementSystem   *string `json:"SuplrQualityManagementSystem"`
 	RecrrgInspIntervalTimeInDays   *int    `json:"RecrrgInspIntervalTimeInDays"`
 	ProductQualityCertificateType  *string `json:"ProductQualityCertificateType"`
+	CreationDate                   *string `json:"CreationDate"`
+	LastChangeDate                 *string `json:"LastChangeDate"`
 	IsMarkedForDeletion            *bool   `json:"IsMarkedForDeletion"`
 }

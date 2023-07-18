@@ -591,13 +591,12 @@ func (c *DPFMAPICaller) BPPlants(
 	log *logger.Logger,
 ) *[]dpfm_api_output_formatter.BPPlant {
 	product := input.General.Product
-	businessPartner := input.BusinessPartnerID
 
 	rows, err := c.db.Query(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_bp_plant_data
-		WHERE Product = ? AND BusinessPartner = ?
-		ORDER BY IsMarkedForDeletion DESC, Product DESC, BusinessPartner DESC;`, product, *businessPartner,
+		WHERE Product = ?
+		ORDER BY IsMarkedForDeletion DESC, Product DESC, BusinessPartner DESC;`, product,
 	)
 	if err != nil {
 		*errs = append(*errs, err)

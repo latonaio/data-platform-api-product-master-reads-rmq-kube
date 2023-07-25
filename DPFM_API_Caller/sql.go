@@ -23,7 +23,7 @@ func (c *DPFMAPICaller) readSqlProcess(
 	var general *[]dpfm_api_output_formatter.General
 	var productDescription *[]dpfm_api_output_formatter.ProductDescription
 	var productDescByBP *[]dpfm_api_output_formatter.ProductDescByBP
-	var businessPartner *[]dpfm_api_output_formatter.BusinessPartner
+	var businessPartners *[]dpfm_api_output_formatter.BusinessPartner
 	var allergen *[]dpfm_api_output_formatter.Allergen
 	var nutritionalInfo *[]dpfm_api_output_formatter.NutritionalInfo
 	var calories *[]dpfm_api_output_formatter.Calories
@@ -53,9 +53,9 @@ func (c *DPFMAPICaller) readSqlProcess(
 			func() {
 				productDescByBP = c.ProductDescsByBP(mtx, input, output, errs, log)
 			}()
-		case "BusinessPartner":
+		case "BusinessPartnersByBusinessPartners":
 			func() {
-				businessPartner = c.BusinessPartner(mtx, input, output, errs, log)
+				businessPartners = c.BusinessPartnersByBusinessPartners(mtx, input, output, errs, log)
 			}()
 		case "Allergen":
 			func() {
@@ -145,7 +145,7 @@ func (c *DPFMAPICaller) readSqlProcess(
 		General:            general,
 		ProductDescription: productDescription,
 		ProductDescByBP:    productDescByBP,
-		BusinessPartner:    businessPartner,
+		BusinessPartner:    businessPartners,
 		Allergen:           allergen,
 		NutritionalInfo:    nutritionalInfo,
 		Calories:           calories,
@@ -282,9 +282,51 @@ func (c *DPFMAPICaller) ProductDescsByBP(
 	errs *[]error,
 	log *logger.Logger,
 ) *[]dpfm_api_output_formatter.ProductDescByBP {
-	in := ""
+	//in := ""
+	var in []string
 
-	for iGeneral, vGeneral := range input.Generals {
+	stringCreate := func(
+		product string,
+		businessPartner int,
+		language string,
+		pDBPIsMarkedForDeletion *bool,
+	) []string {
+		in = append(in, fmt.Sprintf(
+			"( '%s', '%d', '%s', '%t' )",
+			product,
+			businessPartner,
+			language,
+			*pDBPIsMarkedForDeletion,
+		))
+		return in
+	}
+
+	combineStrings := func() string {
+		result := ""
+
+		for i, v := range in {
+			if i == (len(in) - 1) {
+				if len(in) == 1 {
+					result += fmt.Sprintf("%s", v)
+					continue
+				}
+
+				result += fmt.Sprintf(",%s", v)
+				continue
+			}
+
+			if i > 0 {
+				result += fmt.Sprintf("%s, ", v)
+				continue
+			}
+
+			result += v
+		}
+
+		return result
+	}
+
+	for _, vGeneral := range input.Generals { // iGeneral は省略
 		product := vGeneral.Product
 
 		for _, vBusinessPartner := range vGeneral.BusinessPartner { // iBusinessPartner は省略
@@ -294,29 +336,17 @@ func (c *DPFMAPICaller) ProductDescsByBP(
 				language := vProductDescByBP.Language
 				pDBPIsMarkedForDeletion := vProductDescByBP.IsMarkedForDeletion
 
-				if iGeneral == 0 {
-					in = fmt.Sprintf(
-						"( '%s', '%d', '%s', '%t' )",
-						product,
-						businessPartner,
-						language,
-						*pDBPIsMarkedForDeletion,
-					)
-					continue
-				}
-				in = fmt.Sprintf(
-					"%s ,( '%s', '%d', '%s', '%t' )",
-					in,
+				stringCreate(
 					product,
 					businessPartner,
 					language,
-					*pDBPIsMarkedForDeletion,
+					pDBPIsMarkedForDeletion,
 				)
 			}
 		}
 	}
 
-	where := fmt.Sprintf(" WHERE ( Product, BusinessPartner, Language, IsMarkedForDeletion ) IN ( %s ) ", in)
+	where := fmt.Sprintf(" WHERE ( Product, BusinessPartner, Language, IsMarkedForDeletion ) IN ( %s ) ", fmt.Sprintf(combineStrings()))
 	rows, err := c.db.Query(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_product_master_product_desc_by_bp_data
@@ -336,7 +366,7 @@ func (c *DPFMAPICaller) ProductDescsByBP(
 	return data
 }
 
-func (c *DPFMAPICaller) BusinessPartner(
+func (c *DPFMAPICaller) BusinessPartnersByBusinessPartners(
 	mtx *sync.Mutex,
 	input *dpfm_api_input_reader.SDC,
 	output *dpfm_api_output_formatter.SDC,

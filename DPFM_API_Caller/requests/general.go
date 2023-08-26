@@ -16,6 +16,7 @@ type General struct {
 	SizeOrDimensionText           *string  `json:"SizeOrDimensionText"`
 	ProductStandardID             *string  `json:"ProductStandardID"`
 	IndustryStandardName          *string  `json:"IndustryStandardName"`
+	MarkingOfMaterial	          *string  `json:"MarkingOfMaterial"`
 	CountryOfOrigin               *string  `json:"CountryOfOrigin"`
 	CountryOfOriginLanguage       *string  `json:"CountryOfOriginLanguage"`
 	LocalRegionOfOrigin           *string  `json:"LocalRegionOfOrigin"`

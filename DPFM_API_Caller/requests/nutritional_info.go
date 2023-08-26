@@ -6,7 +6,7 @@ type NutritionalInfo struct {
 	Nutrient            string   `json:"Nutrient"`
 	NutrientContent     *float32 `json:"NutrientContent"`
 	NutrientContentUnit *string  `json:"NutrientContentUnit"`
-	CreationDate        *string  `json:"CreationDate"`
-	LastChangeDate      *string  `json:"LastChangeDate"`
+	CreationDate       	string   `json:"CreationDate"`
+	LastChangeDate     	string   `json:"LastChangeDate"`
 	IsMarkedForDeletion *bool    `json:"IsMarkedForDeletion"`
 }

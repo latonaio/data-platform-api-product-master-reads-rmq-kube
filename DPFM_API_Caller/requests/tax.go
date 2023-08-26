@@ -5,7 +5,7 @@ type Tax struct {
 	Country                  string  `json:"Country"`
 	ProductTaxCategory       string  `json:"ProductTaxCategory"`
 	ProductTaxClassification *string `json:"ProductTaxClassification"`
-	CreationDate             *string  `json:"CreationDate"`
-	LastChangeDate           *string  `json:"LastChangeDate"`
-	IsMarkedForDeletion      *bool    `json:"IsMarkedForDeletion"`
+	CreationDate       		 string  `json:"CreationDate"`
+	LastChangeDate     		 string  `json:"LastChangeDate"`
+	IsMarkedForDeletion      *bool   `json:"IsMarkedForDeletion"`
 }

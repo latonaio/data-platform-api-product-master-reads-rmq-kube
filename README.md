@@ -67,7 +67,7 @@ accepter における データ種別 の指定に基づいて DPFM_API_Caller �
 caller.go の func() 毎 の 以下の箇所が、指定された API をコールするソースコードです。  
 
 ```
-func (c *DPFMAPICaller) AsyncProductMasterReads(
+func (c *DPFMAPICaller) AsyncReads(
 	accepter []string,
 	input *dpfm_api_input_reader.SDC,
 	output *dpfm_api_output_formatter.SDC,
@@ -100,131 +100,7 @@ func checkResult(msg rabbitmq.RabbitmqMessage) bool {
 ## Output  
 本マイクロサービスでは、[golang-logging-library-for-data-platform](https://github.com/latonaio/golang-logging-library-for-data-platform) により、以下のようなデータがJSON形式で出力されます。  
 以下の sample.json の例は 品目マスタ の 基本データ が取得された結果の JSON の例です。  
-以下の項目のうち、"OrderID" ～ "PlusMinusFlag" は、/DPFM_API_Output_Formatter/type.go 内 の Type Header {} による出力結果です。"cursor" ～ "time"は、golang-logging-library による 定型フォーマットの出力結果です。  
+以下の項目のうち、"Product" ～ "IsMarkedForDeletion" は、/DPFM_API_Output_Formatter/type.go 内 の Type General {} による出力結果です。"cursor" ～ "time"は、golang-logging-library による 定型フォーマットの出力結果です。  
 
 ```
-{
-    "connection_key": "request",
-    "result": true,
-    "redis_key": "abcdefg",
-    "filepath": "/var/lib/aion/Data/rededge_sdc/abcdef.json",
-    "api_status_code": 200,
-    "runtime_session_id": "f982e32343b24ea39272c534547df545",
-    "business_partner": 201,
-    "service_label": "ORDERS",
-    "message": {
-        "Header": {
-            "OrderID": 114,
-            "OrderDate": "2022-11-22",
-            "OrderType": "",
-            "Buyer": 101,
-            "Seller": 201,
-            "CreationDate": null,
-            "LastChangeDate": null,
-            "ContractType": "",
-            "ValidityStartDate": null,
-            "ValidityEndDate": null,
-            "InvoiceScheduleStartDate": null,
-            "InvoiceScheduleEndDate": null,
-            "TotalNetAmount": null,
-            "TotalTaxAmount": null,
-            "TotalGrossAmount": null,
-            "OverallDeliveryStatus": "",
-            "TotalBlockStatus": null,
-            "OverallOrdReltdBillgStatus": "",
-            "OverallDocReferenceStatus": "",
-            "TransactionCurrency": "",
-            "PricingDate": null,
-            "PriceDetnExchangeRate": null,
-            "RequestedDeliveryDate": null,
-            "HeaderCompleteDeliveryIsDefined": null,
-            "HeaderBillingBlockReason": null,
-            "DeliveryBlockReason": null,
-            "Incoterms": "CIF",
-            "PaymentTerms": "0001",
-            "PaymentMethod": "T",
-            "ReferenceDocument": null,
-            "ReferenceDocumentItem": null,
-            "BPAccountAssignmentGroup": "01",
-            "AccountingExchangeRate": null,
-            "BillingDocumentDate": null,
-            "IsExportImportDelivery": null,
-            "HeaderText": ""
-        },
-        "HeaderPartner": [
-            {
-                "OrderID": 114,
-                "PartnerFunction": "DELIVERTO",
-                "BusinessPartner": 102,
-                "BusinessPartnerFullName": "株式会社ABC虎ノ門店",
-                "BusinessPartnerName": "ABC虎ノ門店",
-                "Organization": "",
-                "Country": "JP",
-                "Language": "JA",
-                "Currency": "JPY",
-                "ExternalDocumentID": "",
-                "AddressID": 200000
-            },
-            {
-                "OrderID": 114,
-                "PartnerFunction": "BUYER",
-                "BusinessPartner": 101,
-                "BusinessPartnerFullName": "株式会社ABC本社",
-                "BusinessPartnerName": "ABC本社",
-                "Organization": "",
-                "Country": "JP",
-                "Language": "JA",
-                "Currency": "JPY",
-                "ExternalDocumentID": "",
-                "AddressID": 100000
-            },
-            {
-                "OrderID": 114,
-                "PartnerFunction": "SELLER",
-                "BusinessPartner": 201,
-                "BusinessPartnerFullName": "パン販売株式会社",
-                "BusinessPartnerName": "パン販売",
-                "Organization": "",
-                "Country": "JP",
-                "Language": "JA",
-                "Currency": "JPY",
-                "ExternalDocumentID": "",
-                "AddressID": 300000
-            }
-        ],
-        "HeaderPartnerPlant": [
-            {
-                "OrderID": 114,
-                "PartnerFunction": "BUYER",
-                "BusinessPartner": 101,
-                "Plant": "AB01"
-            },
-            {
-                "OrderID": 114,
-                "PartnerFunction": "DELIVERTO",
-                "BusinessPartner": 102,
-                "Plant": "AB02"
-            },
-            {
-                "OrderID": 114,
-                "PartnerFunction": "SELLER",
-                "BusinessPartner": 201,
-                "Plant": "TE01"
-            }
-        ]
-    },
-    "api_schema": "DPFMOrdersCreates",
-    "accepter": [
-        "Header"
-    ],
-    "deleted": false,
-    "sql_update_result": true,
-    "sql_update_error": "",
-    "subfunc_result": true,
-    "subfunc_error": "",
-    "exconf_result": true,
-    "exconf_error": "",
-    "api_processing_result": true,
-    "api_processing_error": ""
-}
 ```

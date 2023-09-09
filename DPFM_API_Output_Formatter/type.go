@@ -26,12 +26,10 @@ type SDC struct {
 
 type Message struct {
 	General            *[]General            `json:"General"`
-	GeneralDoc         *[]GeneralDoc         `json:"GeneralDoc"`
 	ProductDescription *[]ProductDescription `json:"ProductDescription"`
 	BusinessPartner    *[]BusinessPartner    `json:"BusinessPartner"`
 	ProductDescByBP    *[]ProductDescByBP    `json:"ProductDescByBP"`
 	BPPlant            *[]BPPlant            `json:"BPPlant"`
-	BPPlantDoc         *[]BPPlantDoc         `json:"BPPlantDoc"`
 	MRPArea            *[]MRPArea            `json:"MRPArea"`
 	StorageLocation    *[]StorageLocation    `json:"StorageLocation"`
 	Production         *[]Production         `json:"Production"`
@@ -70,17 +68,6 @@ type General struct {
 	CreationDate                  string   `json:"CreationDate"`
 	LastChangeDate                string   `json:"LastChangeDate"`
 	IsMarkedForDeletion           *bool    `json:"IsMarkedForDeletion"`
-}
-
-type GeneralDoc struct {
-	Product                  string  `json:"Product"`
-	DocType                  string  `json:"DocType"`
-	DocVersionID             int     `json:"DocVersionID"`
-	DocID                    string  `json:"DocID"`
-	FileExtension            *string `json:"FileExtension"`
-	FileName                 *string `json:"FileName"`
-	FilePath                 *string `json:"FilePath"`
-	DocIssuerBusinessPartner *int    `json:"DocIssuerBusinessPartner"`
 }
 
 type BusinessPartner struct {
@@ -123,19 +110,6 @@ type BPPlant struct {
 	CreationDate                              string   `json:"CreationDate"`
 	LastChangeDate                            string   `json:"LastChangeDate"`
 	IsMarkedForDeletion                       *bool    `json:"IsMarkedForDeletion"`
-}
-
-type BPPlantDoc struct {
-	Product                  string  `json:"Product"`
-	BusinessPartner          int     `json:"BusinessPartner"`
-	Plant                    string  `json:"Plant"`
-	DocType                  string  `json:"DocType"`
-	DocVersionID             int     `json:"DocVersionID"`
-	DocID                    string  `json:"DocID"`
-	FileExtension            *string `json:"FileExtension"`
-	FileName                 *string `json:"FileName"`
-	FilePath                 *string `json:"FilePath"`
-	DocIssuerBusinessPartner *int    `json:"DocIssuerBusinessPartner"`
 }
 
 type MRPArea struct {

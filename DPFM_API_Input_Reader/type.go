@@ -98,7 +98,6 @@ type General struct {
 	IsMarkedForDeletion           *bool                `json:"IsMarkedForDeletion"`
 	ProductDescription            []ProductDescription `json:"ProductDescription"`
 	BusinessPartner               []BusinessPartner    `json:"BusinessPartner"`
-	GeneralDoc                    []GeneralDoc         `json:"GeneralDoc"`
 	Tax                           []Tax                `json:"Tax"`
 }
 
@@ -172,7 +171,6 @@ type BPPlant struct {
 	Quality                                   []Quality         `json:"Quality"`
 	Accounting                                []Accounting      `json:"Accounting"`
 	StorageLocation                           []StorageLocation `json:"StorageLocation"`
-	BPPlantDoc                                []BPPlantDoc      `json:"BPPlantDoc"`
 }
 
 type MRPArea struct {
@@ -274,17 +272,6 @@ type StorageBin struct {
 	IsMarkedForDeletion *bool   `json:"IsMarkedForDeletion"`
 }
 
-type GeneralDoc struct {
-	Product                  string  `json:"Product"`
-	DocType                  string  `json:"DocType"`
-	DocVersionID             int     `json:"DocVersionID"`
-	DocID                    string  `json:"DocID"`
-	FileExtension            *string `json:"FileExtension"`
-	FileName                 *string `json:"FileName"`
-	FilePath                 *string `json:"FilePath"`
-	DocIssuerBusinessPartner *int    `json:"DocIssuerBusinessPartner"`
-}
-
 type Accounting struct {
 	Product             string   `json:"Product"`
 	BusinessPartner     int      `json:"BusinessPartner"`
@@ -339,17 +326,4 @@ type NutritionalInfo struct {
 	CreationDate        *string  `json:"CreationDate"`
 	LastChangeDate      *string  `json:"LastChangeDate"`
 	IsMarkedForDeletion *bool    `json:"IsMarkedForDeletion"`
-}
-
-type BPPlantDoc struct {
-	Product                  string  `json:"Product"`
-	BusinessPartner          int     `json:"BusinessPartner"`
-	Plant                    string  `json:"Plant"`
-	DocType                  string  `json:"DocType"`
-	DocVersionID             int     `json:"DocVersionID"`
-	DocID                    string  `json:"DocID"`
-	FileExtension            *string `json:"FileExtension"`
-	FileName                 *string `json:"FileName"`
-	FilePath                 *string `json:"FilePath"`
-	DocIssuerBusinessPartner *int    `json:"DocIssuerBusinessPartner"`
 }

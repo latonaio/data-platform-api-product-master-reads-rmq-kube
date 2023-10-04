@@ -31,7 +31,6 @@ func ConvertToGeneral(rows *sql.Rows) (*[]General, error) {
 			&pm.SizeOrDimensionText,
 			&pm.ProductStandardID,
 			&pm.IndustryStandardName,
-			&pm.MarkingOfMaterial,
 			&pm.CountryOfOrigin,
 			&pm.CountryOfOriginLanguage,
 			&pm.LocalRegionOfOrigin,
@@ -41,6 +40,7 @@ func ConvertToGeneral(rows *sql.Rows) (*[]General, error) {
 			&pm.CreationDate,
 			&pm.LastChangeDate,
 			&pm.IsMarkedForDeletion,
+			&pm.MarkingOfMaterial,
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
@@ -64,7 +64,6 @@ func ConvertToGeneral(rows *sql.Rows) (*[]General, error) {
 			SizeOrDimensionText:           data.SizeOrDimensionText,
 			ProductStandardID:             data.ProductStandardID,
 			IndustryStandardName:          data.IndustryStandardName,
-			MarkingOfMaterial:             data.MarkingOfMaterial,
 			CountryOfOrigin:               data.CountryOfOrigin,
 			CountryOfOriginLanguage:       data.CountryOfOriginLanguage,
 			LocalRegionOfOrigin:           data.LocalRegionOfOrigin,
@@ -74,6 +73,7 @@ func ConvertToGeneral(rows *sql.Rows) (*[]General, error) {
 			CreationDate:                  data.CreationDate,
 			LastChangeDate:                data.LastChangeDate,
 			IsMarkedForDeletion:           data.IsMarkedForDeletion,
+			MarkingOfMaterial:             data.MarkingOfMaterial,
 		})
 	}
 	if i == 0 {
@@ -614,17 +614,17 @@ func ConvertToQuality(rows *sql.Rows) (*[]Quality, error) {
 
 		data := pm
 		quality = append(quality, Quality{
-			Product:                        data.Product,
-			BusinessPartner:                data.BusinessPartner,
-			Plant:                          data.Plant,
-			ProductSpecification:           data.ProductSpecification,
-			QualityMgmtCtrlKey:             data.QualityMgmtCtrlKey,
-			MaximumStoragePeriodInDays:     data.MaximumStoragePeriodInDays,
-			RecrrgInspIntervalTimeInDays:   data.RecrrgInspIntervalTimeInDays,
-			ProductQualityCertificateType:  data.ProductQualityCertificateType,
-			CreationDate:                   data.CreationDate,
-			LastChangeDate:                 data.LastChangeDate,
-			IsMarkedForDeletion:            data.IsMarkedForDeletion,
+			Product:                       data.Product,
+			BusinessPartner:               data.BusinessPartner,
+			Plant:                         data.Plant,
+			ProductSpecification:          data.ProductSpecification,
+			QualityMgmtCtrlKey:            data.QualityMgmtCtrlKey,
+			MaximumStoragePeriodInDays:    data.MaximumStoragePeriodInDays,
+			RecrrgInspIntervalTimeInDays:  data.RecrrgInspIntervalTimeInDays,
+			ProductQualityCertificateType: data.ProductQualityCertificateType,
+			CreationDate:                  data.CreationDate,
+			LastChangeDate:                data.LastChangeDate,
+			IsMarkedForDeletion:           data.IsMarkedForDeletion,
 		})
 	}
 	if i == 0 {
@@ -649,9 +649,9 @@ func ConvertToProduction(rows *sql.Rows) (*[]Production, error) {
 			&pm.BusinessPartner,
 			&pm.Plant,
 			&pm.ProductionStorageLocation,
-			&pm.ProductProcessingDuration,
-			&pm.ProductProcessingDurationUnit,
-			&pm.ProductProductionQuantityUnit,
+			&pm.ProductionDuration,
+			&pm.ProductionDurationUnit,
+			&pm.ProductionQuantityUnit,
 			&pm.MinimumProductionQuantityInBaseUnit,
 			&pm.MinimumProductionLotSizeQuantityInBaseUnit,
 			&pm.StandardProductionQuantityInBaseUnit,
@@ -681,14 +681,14 @@ func ConvertToProduction(rows *sql.Rows) (*[]Production, error) {
 
 		data := pm
 		production = append(production, Production{
-			Product:                                           data.Product,
-			BusinessPartner:                                   data.BusinessPartner,
-			Plant:                                             data.Plant,
-			ProductionStorageLocation:                         data.ProductionStorageLocation,
-			ProductProcessingDuration:                         data.ProductProcessingDuration,
-			ProductProcessingDurationUnit:                     data.ProductProcessingDurationUnit,
-			ProductProductionQuantityUnit:                     data.ProductProductionQuantityUnit,
-			MinimumProductionQuantityInBaseUnit:               data.MinimumProductionQuantityInBaseUnit,
+			Product:                             data.Product,
+			BusinessPartner:                     data.BusinessPartner,
+			Plant:                               data.Plant,
+			ProductionStorageLocation:           data.ProductionStorageLocation,
+			ProductionDuration:                  data.ProductionDuration,
+			ProductionDurationUnit:              data.ProductionDurationUnit,
+			ProductionQuantityUnit:              data.ProductionQuantityUnit,
+			MinimumProductionQuantityInBaseUnit: data.MinimumProductionQuantityInBaseUnit,
 			MinimumProductionLotSizeQuantityInBaseUnit:        data.MinimumProductionLotSizeQuantityInBaseUnit,
 			StandardProductionQuantityInBaseUnit:              data.StandardProductionQuantityInBaseUnit,
 			StandardProductionLotSizeQuantityInBaseUnit:       data.StandardProductionLotSizeQuantityInBaseUnit,
